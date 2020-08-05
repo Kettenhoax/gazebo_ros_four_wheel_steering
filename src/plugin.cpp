@@ -132,7 +132,8 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     {REAR_RIGHT, "rear_right_motor"},
     {REAR_LEFT, "rear_left_motor"},
     {FRONT_STEERING, "front_steering"},
-    {REAR_STEERING, "rear_steering"}};
+    // {REAR_STEERING, "rear_steering"}
+  };
 
   for (const auto & joint_name : joint_names) {
     auto id = joint_name.first;
@@ -170,7 +171,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
       pid.Y(), pid.Z(), i_range.X(), i_range.Y(), joint_name.c_str());
   }
 
-  for (auto i : {FRONT_STEERING, REAR_STEERING}) {
+  for (auto i : {FRONT_STEERING}) {
     auto id = (JointIdentifier)i;
     auto joint_name = joint_names[id];
     auto default_gain = impl_->joints_[i]->UpperLimit(0) * impl_->joints_[i]->GetEffortLimit(0);
@@ -225,8 +226,8 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     impl_->ros_node_->get_logger(),
     "Wheel track: %.2f", impl_->vehicle_.wheel_track);
 
-  auto front_left_axle_center_pos = _model->GetJoint("front_left_axle")->
-    GetChild()->GetCollision(collision_id)->WorldPose().Pos();
+  auto front_left_axle_center_pos =
+    _model->GetLink("front_left_axle")->GetCollision(collision_id)->WorldPose().Pos();
   impl_->vehicle_.distance_steering_to_wheel =
     (front_left_center_pos - front_left_axle_center_pos).Length();
 
@@ -323,7 +324,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
     }
   }
 
-  for (auto steer_i : {FRONT_STEERING, REAR_STEERING}) {
+  for (auto steer_i : {FRONT_STEERING}) {
     auto current_angle = joints_[steer_i]->Position(0);
     auto angle_error = current_angle - cmds[steer_i];
     errors[steer_i] = angle_error;
@@ -332,7 +333,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   }
 
   if (!pid_publishers_.empty()) {
-    for (size_t i = FRONT_RIGHT; i < 8; i++) {
+    for (size_t i = FRONT_RIGHT; i <= FRONT_STEERING; i++) {
       auto pid = joint_pids_[i];
       control_msgs::msg::PidState state;
       state.header.frame_id = robot_base_frame_;

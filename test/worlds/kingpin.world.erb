@@ -46,50 +46,6 @@
           </geometry>
         </collision>
       </link>
-      <link name="front_right_wheel">
-        <pose>0.8 -0.75 0.05 -1.5705 0 0</pose>
-        <inertial>
-          <mass>11</mass>
-          <inertia>
-            <ixx>0.413</ixx>
-            <iyy>0.413</iyy>
-            <izz>0.671</izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.3</length>
-              <radius>0.35</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.3</length>
-              <radius>0.35</radius>
-            </cylinder>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>1.1</mu>
-                <mu2>1.1</mu2>
-              </ode>
-            </friction>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <kp>1e9</kp>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
 
       <link name="front_steering_triangle">
         <pose>0.35 0 0.05 0 0 0</pose>
@@ -146,17 +102,71 @@
       </joint>
       
 <%
-  front_steers = {}
-  front_steers["left"] = {}
-  front_steers["left"][:side] = 1
-  front_steers["right"] = {}
-  front_steers["right"][:side] = -1
+  wheels = {}
+  wheels["front_left"] = {}
+  wheels["front_left"][:side] = 1
+  wheels["front_left"][:front] = 1
+  wheels["front_right"] = {}
+  wheels["front_right"][:side] = -1
+  wheels["front_right"][:front] = 1
+  wheels["rear_left"] = {}
+  wheels["rear_left"][:side] = 1
+  wheels["rear_left"][:front] = -1
+  wheels["rear_right"] = {}
+  wheels["rear_right"][:side] = -1
+  wheels["rear_right"][:front] = -1
 
-  front_steers.keys.each do |k|
-    steer = front_steers[k]
+  wheels.keys.each do |k|
+    side = wheels[k][:side]
+    front = wheels[k][:front]
 %>
-      <link name="front_<%= k %>_axle">
-        <pose>0.8 <%= steer[:side] * 0.65 %> 0.05 0 0 0</pose>
+      <link name="<%= k %>_wheel">
+        <pose><%= front * 0.8 %> <%= side * 0.75 %> 0.05 -1.5705 0 0</pose>
+        <inertial>
+          <mass>11</mass>
+          <inertia>
+            <ixx>0.413</ixx>
+            <iyy>0.413</iyy>
+            <izz>0.671</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.3</length>
+              <radius>0.35</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.3</length>
+              <radius>0.35</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+                <mu2>1.1</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <kp>1e9</kp>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+
+      <link name="<%= k %>_axle">
+        <pose><%= front * 0.8 %> <%= side * 0.65 %> 0.05 0 0 0</pose>
         <inertial>
           <mass>2</mass>
           <inertia>
@@ -185,7 +195,20 @@
           </geometry>
         </collision>
       </link>
+<%
+  end
+%>
+      
+<%
+  front_steers = {}
+  front_steers["left"] = {}
+  front_steers["left"][:side] = 1
+  front_steers["right"] = {}
+  front_steers["right"][:side] = -1
 
+  front_steers.keys.each do |k|
+    steer = front_steers[k]
+%>
       <link name="front_<%= k %>_axle_rod_connector">
         <pose>0.7 <%= steer[:side] * 0.62 %> 0.05 0 0 0</pose>
         <inertial>
@@ -244,12 +267,9 @@
         </collision>
       </link>
 
-      <joint name="front_<%= k %>_steering_connector" type="revolute">
+      <joint name="front_<%= k %>_steering_connector" type="fixed">
         <parent>front_steering_triangle</parent>
         <child>front_<%= k %>_steering_triangle</child>
-        <axis>
-          <xyz>0 0 1</xyz>
-        </axis>
       </joint>
 
       <joint name="front_<%= k %>_steering_rod" type="revolute">
@@ -286,158 +306,36 @@
           </ode>
         </physics>
       </joint>
+<%
+  end
+%>
 
-      <joint name="front_<%= k %>_motor" type="fixed">
-        <parent>front_<%= k %>_axle</parent>
-        <child>front_<%= k %>_wheel</child>
+<%
+  motors = {}
+  motors["front_left"] = {}
+  motors["front_right"] = {}
+  motors["rear_left"] = {}
+  motors["rear_right"] = {}
+
+  motors.keys.each do |k|
+%>
+      <joint name="<%= k %>_motor" type="revolute">
+        <parent><%= k %>_axle</parent>
+        <child><%= k %>_wheel</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <dynamics>
+            <friction>12</friction>
+          </dynamics>
+          <limit>
+            <effort>755</effort>
+            <velocity>6.358</velocity>
+          </limit>
+        </axis>
       </joint>
 <%
   end
 %>
-      <link name="front_left_wheel">
-        <pose>0.8 0.75 0.05 -1.5705 0 0</pose>
-        <inertial>
-          <mass>11</mass>
-          <inertia>
-            <ixx>0.41300485416666666</ixx>
-            <iyy>0.41300485416666666</iyy>
-            <izz>0.6718263749999999</izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>1.1</mu>
-                <mu2>1.1</mu2>
-              </ode>
-            </friction>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <kp>1e9</kp>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-
-      <link name="rear_right_wheel">
-        <pose>-0.8 -0.75 0.05 -1.5705 0 0</pose>
-        <inertial>
-          <mass>11</mass>
-          <inertia>
-            <ixx>0.41300485416666666</ixx>
-            <iyy>0.41300485416666666</iyy>
-            <izz>0.6718263749999999</izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>1.1</mu>
-                <mu2>1.1</mu2>
-              </ode>
-            </friction>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <kp>1e9</kp>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-
-      <link name="rear_left_wheel">
-        <pose>-0.8 0.75 0.05 -1.5705 0 0</pose>
-        <inertial>
-          <mass>11</mass>
-          <inertia>
-            <ixx>0.41300485416666666</ixx>
-            <iyy>0.41300485416666666</iyy>
-            <izz>0.6718263749999999</izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.29</length>
-              <radius>0.3495</radius>
-            </cylinder>
-          </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>1.1</mu>
-                <mu2>1.1</mu2>
-              </ode>
-            </friction>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <kp>1e9</kp>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-
-      <joint name="rear_right_motor" type="fixed">
-        <parent>chassis</parent>
-        <child>rear_right_wheel</child>
-      </joint>
-
-      <joint name="rear_left_motor" type="fixed">
-        <parent>chassis</parent>
-        <child>rear_left_wheel</child>
-      </joint>
 
       <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering.so">
         <ros>
