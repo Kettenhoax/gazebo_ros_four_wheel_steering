@@ -123,8 +123,8 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   // Initialize ROS node
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
-  impl_->joints_.resize(8);
-  impl_->joint_pids_.resize(8);
+  impl_->joints_.resize(6);
+  impl_->joint_pids_.resize(6);
 
   std::map<JointIdentifier, std::string> joint_names =
   {{FRONT_RIGHT, "front_right_motor"},
@@ -132,7 +132,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     {REAR_RIGHT, "rear_right_motor"},
     {REAR_LEFT, "rear_left_motor"},
     {FRONT_STEERING, "front_steering"},
-    // {REAR_STEERING, "rear_steering"}
+    {REAR_STEERING, "rear_steering"},
   };
 
   for (const auto & joint_name : joint_names) {
@@ -171,7 +171,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
       pid.Y(), pid.Z(), i_range.X(), i_range.Y(), joint_name.c_str());
   }
 
-  for (auto i : {FRONT_STEERING}) {
+  for (auto i : {FRONT_STEERING, REAR_STEERING}) {
     auto id = (JointIdentifier)i;
     auto joint_name = joint_names[id];
     auto default_gain = impl_->joints_[i]->UpperLimit(0) * impl_->joints_[i]->GetEffortLimit(0);
@@ -302,7 +302,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   auto ros_time = ros_node_->now();
 
   std::vector<double> errors;
-  errors.resize(8);
+  errors.resize(6);
 
   double cmds[6];
   compute_wheel_targets(last_cmd_, vehicle_, cmds);
@@ -324,7 +324,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
     }
   }
 
-  for (auto steer_i : {FRONT_STEERING}) {
+  for (auto steer_i : {FRONT_STEERING, REAR_STEERING}) {
     auto current_angle = joints_[steer_i]->Position(0);
     auto angle_error = current_angle - cmds[steer_i];
     errors[steer_i] = angle_error;
@@ -333,7 +333,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   }
 
   if (!pid_publishers_.empty()) {
-    for (size_t i = FRONT_RIGHT; i <= FRONT_STEERING; i++) {
+    for (size_t i = FRONT_RIGHT; i <= REAR_STEERING; i++) {
       auto pid = joint_pids_[i];
       control_msgs::msg::PidState state;
       state.header.frame_id = robot_base_frame_;
