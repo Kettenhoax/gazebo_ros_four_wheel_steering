@@ -1,0 +1,573 @@
+<sdf version="1.6">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <ode>
+        <solver>
+          <friction_model>cone_model</friction_model>
+        </solver>
+      </ode>
+    </physics>
+
+    <model name="vehicle">
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="chassis">
+        <pose>0 0 0.5 0 0 0.0</pose>
+        <inertial>
+          <mass>100.0</mass>
+          <pose>-0.05 0 -0.1 0 0</pose>
+          <inertia>
+            <ixx>15.0</ixx>
+            <iyy>36.33</iyy>
+            <izz>45.33</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="chassis_visual">
+          <geometry>
+            <box>
+              <size>2.0 1 0.6</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="chassis">
+          <geometry>
+            <box>
+              <size>2.0 1 0.6</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <link name="front_right_wheel">
+        <pose>0.8 -0.75 0.05 -1.5705 0 0</pose>
+        <inertial>
+          <mass>11</mass>
+          <inertia>
+            <ixx>0.413</ixx>
+            <iyy>0.413</iyy>
+            <izz>0.671</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.3</length>
+              <radius>0.35</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.3</length>
+              <radius>0.35</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+                <mu2>1.1</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <kp>1e9</kp>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+
+      <link name="front_steering_triangle">
+        <pose>0.35 0 0.05 0 0 0</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.02</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.1</length>
+              <radius>0.1</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.1</length>
+              <radius>0.1</radius>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <joint name="front_steering_motor" type="revolute">
+        <parent>chassis</parent>
+        <child>front_steering_triangle</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1</lower>
+            <upper>1</upper>
+            <effort>2000</effort>
+            <velocity>1.24</velocity>
+          </limit>
+          <dynamics>
+            <damping>1</damping>
+            <friction>0</friction>
+          </dynamics>
+        </axis>
+        <physics>
+          <ode>
+            <cfm_damping>1</cfm_damping>
+          </ode>
+        </physics>
+      </joint>
+      
+      <link name="front_left_axle">
+        <pose>0.8 0.65 0.05 0 0 0</pose>
+        <inertial>
+          <mass>2</mass>
+          <inertia>
+            <ixx>0.001666667</ixx>
+            <ixy>0.0</ixy>
+            <iyy>0.001666667</iyy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+            <izz>0.0025</izz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.05</length>
+              <radius>0.05</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.05</length>
+              <radius>0.05</radius>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <link name="front_left_steering_triangle">
+        <pose>0.45 0.15 0.05 0 0 0</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.02</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <link name="front_left_steering_rod">
+        <pose>0.8 0.65 0.05 0 1.57 1.413</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.02</ixx>
+            <iyy>0.02</iyy>
+            <izz>0.00</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.6</length>
+              <radius>0.02</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.6</length>
+              <radius>0.02</radius>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <joint name="front_left_steering_connector" type="fixed">
+        <parent>front_steering_triangle</parent>
+        <child>front_left_steering_triangle</child>
+      </joint>
+
+      <joint name="front_left_steering_motor_rod_connector" type="fixed">
+        <parent>front_left_steering_triangle</parent>
+        <child>front_left_steering_rod</child>
+        <pose>0 0 -0.6 0 0 0</pose>
+      </joint>
+
+      <joint name="front_left_steering_rod_axle_connector" type="revolute">
+        <parent>front_left_steering_rod</parent>
+        <child>front_left_axle</child>
+        <pose>-0.05 0.05 0 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+
+      <joint name="front_left_kingpin" type="revolute">
+        <parent>chassis</parent>
+        <child>front_left_axle</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-0.62</lower>
+            <upper>0.62</upper>
+          </limit>
+          <dynamics>
+            <damping>1</damping>
+            <friction>0</friction>
+          </dynamics>
+        </axis>
+        <physics>
+          <ode>
+            <cfm_damping>1</cfm_damping>
+          </ode>
+        </physics>
+      </joint>
+
+      <joint name="front_left_wheel_motor" type="fixed">
+        <parent>front_left_axle</parent>
+        <child>front_left_wheel</child>
+      </joint>
+      <link name="front_right_axle">
+        <pose>0.8 -0.65 0.05 0 0 0</pose>
+        <inertial>
+          <mass>2</mass>
+          <inertia>
+            <ixx>0.001666667</ixx>
+            <ixy>0.0</ixy>
+            <iyy>0.001666667</iyy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+            <izz>0.0025</izz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.05</length>
+              <radius>0.05</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.05</length>
+              <radius>0.05</radius>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <link name="front_right_steering_triangle">
+        <pose>0.45 -0.15 0.05 0 0 0</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.02</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+
+      <link name="front_right_steering_rod">
+        <pose>0.8 -0.65 0.05 0 1.57 -1.413</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.02</ixx>
+            <iyy>0.02</iyy>
+            <izz>0.00</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.6</length>
+              <radius>0.02</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.6</length>
+              <radius>0.02</radius>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <joint name="front_right_steering_connector" type="fixed">
+        <parent>front_steering_triangle</parent>
+        <child>front_right_steering_triangle</child>
+      </joint>
+
+      <joint name="front_right_steering_motor_rod_connector" type="fixed">
+        <parent>front_right_steering_triangle</parent>
+        <child>front_right_steering_rod</child>
+        <pose>0 0 -0.6 0 0 0</pose>
+      </joint>
+
+      <joint name="front_right_steering_rod_axle_connector" type="revolute">
+        <parent>front_right_steering_rod</parent>
+        <child>front_right_axle</child>
+        <pose>-0.05 0.05 0 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+
+      <joint name="front_right_kingpin" type="revolute">
+        <parent>chassis</parent>
+        <child>front_right_axle</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-0.62</lower>
+            <upper>0.62</upper>
+          </limit>
+          <dynamics>
+            <damping>1</damping>
+            <friction>0</friction>
+          </dynamics>
+        </axis>
+        <physics>
+          <ode>
+            <cfm_damping>1</cfm_damping>
+          </ode>
+        </physics>
+      </joint>
+
+      <joint name="front_right_wheel_motor" type="fixed">
+        <parent>front_right_axle</parent>
+        <child>front_right_wheel</child>
+      </joint>
+      <link name="front_left_wheel">
+        <pose>0.8 0.75 0.05 -1.5705 0 0</pose>
+        <inertial>
+          <mass>11</mass>
+          <inertia>
+            <ixx>0.41300485416666666</ixx>
+            <iyy>0.41300485416666666</iyy>
+            <izz>0.6718263749999999</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+                <mu2>1.1</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <kp>1e9</kp>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+
+      <link name="rear_right_wheel">
+        <pose>-0.8 -0.75 0.05 -1.5705 0 0</pose>
+        <inertial>
+          <mass>11</mass>
+          <inertia>
+            <ixx>0.41300485416666666</ixx>
+            <iyy>0.41300485416666666</iyy>
+            <izz>0.6718263749999999</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+                <mu2>1.1</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <kp>1e9</kp>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+
+      <link name="rear_left_wheel">
+        <pose>-0.8 0.75 0.05 -1.5705 0 0</pose>
+        <inertial>
+          <mass>11</mass>
+          <inertia>
+            <ixx>0.41300485416666666</ixx>
+            <iyy>0.41300485416666666</iyy>
+            <izz>0.6718263749999999</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <length>0.29</length>
+              <radius>0.3495</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+                <mu2>1.1</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <kp>1e9</kp>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+
+      <joint name="front_left_motor" type="fixed">
+        <parent>chassis</parent>
+        <child>front_left_wheel</child>
+      </joint>
+
+      <joint name="rear_right_motor" type="fixed">
+        <parent>chassis</parent>
+        <child>rear_right_wheel</child>
+      </joint>
+
+      <joint name="rear_left_motor" type="fixed">
+        <parent>chassis</parent>
+        <child>rear_left_wheel</child>
+      </joint>
+
+      <!-- <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering_kingpin.so"><ros><namespace>test</namespace></ros><front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain><front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain><rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain><rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain><front_steering_pid_gain>2000 0 2</front_steering_pid_gain><rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain></plugin> -->
+    </model>
+  </world>
+</sdf>
