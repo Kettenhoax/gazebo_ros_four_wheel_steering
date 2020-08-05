@@ -43,7 +43,7 @@ using four_wheel_steering_msgs::msg::FourWheelSteering;
 
 void compute_wheel_targets(
   const FourWheelSteering & cmd_4ws,
-  const FourWheelSteeringVehicle & vehicle, double cmds[8])
+  const FourWheelSteeringVehicle & vehicle, double cmds[6])
 {
 // Compute steering angles
   const double tan_front_steering = tan(cmd_4ws.front_steering_angle);
@@ -54,13 +54,18 @@ void compute_wheel_targets(
 
   auto wb = vehicle.wheel_base;
 
+  double front_left_angle = 0.0;
+  double front_right_angle = 0.0;
+  double rear_left_angle = 0.0;
+  double rear_right_angle = 0.0;
+
   if (fabs(vehicle.wheel_base - fabs(steering_diff)) > 0.001) {
-    cmds[FRONT_LEFT_STEERING] =
-      atan(wb * tan_front_steering / (wb - steering_diff));
-    cmds[FRONT_RIGHT_STEERING] =
-      atan(wb * tan_front_steering / (wb + steering_diff));
-    cmds[REAR_LEFT_STEERING] = atan(wb * tan_rear_steering / (wb - steering_diff));
-    cmds[REAR_RIGHT_STEERING] = atan(wb * tan_rear_steering / (wb + steering_diff));
+    front_left_angle = atan(wb * tan_front_steering / (wb - steering_diff));
+    front_right_angle = atan(wb * tan_front_steering / (wb + steering_diff));
+    rear_left_angle = atan(wb * tan_rear_steering / (wb - steering_diff));
+    rear_right_angle = atan(wb * tan_rear_steering / (wb + steering_diff));
+    cmds[FRONT_STEERING] = -cmd_4ws.front_steering_angle;
+    cmds[REAR_STEERING] = -cmd_4ws.rear_steering_angle;
   }
 
   // Compute wheels velocities
@@ -68,18 +73,18 @@ void compute_wheel_targets(
     //Virutal front and rear wheelbase
     // distance between the projection of the CIR on the wheelbase and the front axle
     double l_front = 0;
-    if (fabs(tan(cmds[FRONT_LEFT_STEERING]) - tan(cmds[FRONT_RIGHT_STEERING])) >
+    if (fabs(tan(front_left_angle) - tan(front_right_angle)) >
       0.01)
     {
-      l_front = tan(cmds[FRONT_RIGHT_STEERING]) *
-        tan(cmds[FRONT_LEFT_STEERING]) * steering_track /
-        (tan(cmds[FRONT_LEFT_STEERING]) - tan(cmds[FRONT_RIGHT_STEERING]));
+      l_front = tan(front_right_angle) *
+        tan(front_left_angle) * steering_track /
+        (tan(front_left_angle) - tan(front_right_angle));
     }
     // distance between the projection of the CIR on the wheelbase and the rear axle
     double l_rear = 0;
-    if (fabs(tan(cmds[REAR_LEFT_STEERING]) - tan(cmds[REAR_RIGHT_STEERING])) > 0.01) {
-      l_rear = tan(cmds[REAR_RIGHT_STEERING]) * tan(cmds[REAR_LEFT_STEERING]) * steering_track /
-        (tan(cmds[REAR_LEFT_STEERING]) - tan(cmds[REAR_RIGHT_STEERING]));
+    if (fabs(tan(rear_left_angle) - tan(rear_right_angle)) > 0.01) {
+      l_rear = tan(rear_right_angle) * tan(rear_left_angle) * steering_track /
+        (tan(rear_left_angle) - tan(rear_right_angle));
     }
 
     const double angular_speed_cmd = cmd_4ws.speed * (tan_front_steering - tan_rear_steering) /

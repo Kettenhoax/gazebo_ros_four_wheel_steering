@@ -35,20 +35,14 @@ enum JointIdentifier
   /// Rear left wheel
   REAR_LEFT,
 
-  /// Front right steering
-  FRONT_RIGHT_STEERING,
+  /// Front steering
+  FRONT_STEERING,
 
-  /// Front left steering
-  FRONT_LEFT_STEERING,
-
-  /// Rear right steering
-  REAR_RIGHT_STEERING,
-
-  /// Rear left steering
-  REAR_LEFT_STEERING,
+  /// Rear steering
+  REAR_STEERING,
 };
 
-/// A control drive plugin for robots with two independently steerable axes.
+/// A control drive plugin for robots with two steerable axles.
 /// Subscribes to four_wheel_steering_msgs/msg/FourWheelSteering
 
 /**
@@ -64,8 +58,9 @@ enum JointIdentifier
       <update_rate>100.0</update_rate>
 
       <!-- PID tuning -->
-      <front_right_steering_pid_gain>2 0 1</front_right_steering_pid_gain>
-      <front_right_steering_i_range>0 0</front_right_steering_i_range>
+      <front_steering_pid_gain>2 0 1</front_steering_pid_gain>
+      <front_steering_i_range>0 0</front_steering_i_range>
+      ...
 
       <robot_base_frame>base_footprint</robot_base_frame>
     </plugin>

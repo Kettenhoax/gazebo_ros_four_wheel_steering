@@ -122,7 +122,7 @@
         </collision>
       </link>
 
-      <joint name="front_steering_motor" type="revolute">
+      <joint name="front_steering" type="revolute">
         <parent>chassis</parent>
         <child>front_steering_triangle</child>
         <axis>
@@ -176,6 +176,35 @@
         </collision>
       </link>
 
+      <link name="front_left_axle_rod_connector">
+        <pose>0.7 0.62 0.05 0 0 0</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.02</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+
       <link name="front_left_steering_triangle">
         <pose>0.45 0.15 0.05 0 0 0</pose>
         <inertial>
@@ -205,55 +234,26 @@
         </collision>
       </link>
 
-      <link name="front_left_steering_rod">
-        <pose>0.8 0.65 0.05 0 1.57 1.413</pose>
-        <inertial>
-          <mass>1</mass>
-          <inertia>
-            <ixx>0.02</ixx>
-            <iyy>0.02</iyy>
-            <izz>0.00</izz>
-            <ixy>0.00</ixy>
-            <ixz>0.00</ixz>
-            <iyz>0.00</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.6</length>
-              <radius>0.02</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.6</length>
-              <radius>0.02</radius>
-            </cylinder>
-          </geometry>
-        </collision>
-      </link>
-
-      <joint name="front_left_steering_connector" type="fixed">
+      <joint name="front_left_steering_connector" type="revolute">
         <parent>front_steering_triangle</parent>
         <child>front_left_steering_triangle</child>
-      </joint>
-
-      <joint name="front_left_steering_motor_rod_connector" type="fixed">
-        <parent>front_left_steering_triangle</parent>
-        <child>front_left_steering_rod</child>
-        <pose>0 0 -0.6 0 0 0</pose>
-      </joint>
-
-      <joint name="front_left_steering_rod_axle_connector" type="revolute">
-        <parent>front_left_steering_rod</parent>
-        <child>front_left_axle</child>
-        <pose>-0.05 0.05 0 0 0 0</pose>
         <axis>
           <xyz>0 0 1</xyz>
         </axis>
+      </joint>
+
+      <joint name="front_left_steering_rod" type="revolute">
+        <parent>front_left_steering_triangle</parent>
+        <child>front_left_axle_rod_connector</child>
+        <pose>-0.25 -0.47 0 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+
+      <joint name="front_left_axle_connection" type="fixed">
+        <parent>front_left_axle_rod_connector</parent>
+        <child>front_left_axle</child>
       </joint>
 
       <joint name="front_left_kingpin" type="revolute">
@@ -277,7 +277,7 @@
         </physics>
       </joint>
 
-      <joint name="front_left_wheel_motor" type="fixed">
+      <joint name="front_left_motor" type="fixed">
         <parent>front_left_axle</parent>
         <child>front_left_wheel</child>
       </joint>
@@ -312,6 +312,35 @@
         </collision>
       </link>
 
+      <link name="front_right_axle_rod_connector">
+        <pose>0.7 -0.62 0.05 0 0 0</pose>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.02</izz>
+            <ixy>0.00</ixy>
+            <ixz>0.00</ixz>
+            <iyz>0.00</iyz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.05</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+
       <link name="front_right_steering_triangle">
         <pose>0.45 -0.15 0.05 0 0 0</pose>
         <inertial>
@@ -341,55 +370,26 @@
         </collision>
       </link>
 
-      <link name="front_right_steering_rod">
-        <pose>0.8 -0.65 0.05 0 1.57 -1.413</pose>
-        <inertial>
-          <mass>1</mass>
-          <inertia>
-            <ixx>0.02</ixx>
-            <iyy>0.02</iyy>
-            <izz>0.00</izz>
-            <ixy>0.00</ixy>
-            <ixz>0.00</ixz>
-            <iyz>0.00</iyz>
-          </inertia>
-        </inertial>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <length>0.6</length>
-              <radius>0.02</radius>
-            </cylinder>
-          </geometry>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <length>0.6</length>
-              <radius>0.02</radius>
-            </cylinder>
-          </geometry>
-        </collision>
-      </link>
-
-      <joint name="front_right_steering_connector" type="fixed">
+      <joint name="front_right_steering_connector" type="revolute">
         <parent>front_steering_triangle</parent>
         <child>front_right_steering_triangle</child>
-      </joint>
-
-      <joint name="front_right_steering_motor_rod_connector" type="fixed">
-        <parent>front_right_steering_triangle</parent>
-        <child>front_right_steering_rod</child>
-        <pose>0 0 -0.6 0 0 0</pose>
-      </joint>
-
-      <joint name="front_right_steering_rod_axle_connector" type="revolute">
-        <parent>front_right_steering_rod</parent>
-        <child>front_right_axle</child>
-        <pose>-0.05 0.05 0 0 0 0</pose>
         <axis>
           <xyz>0 0 1</xyz>
         </axis>
+      </joint>
+
+      <joint name="front_right_steering_rod" type="revolute">
+        <parent>front_right_steering_triangle</parent>
+        <child>front_right_axle_rod_connector</child>
+        <pose>-0.25 0.47 0 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+
+      <joint name="front_right_axle_connection" type="fixed">
+        <parent>front_right_axle_rod_connector</parent>
+        <child>front_right_axle</child>
       </joint>
 
       <joint name="front_right_kingpin" type="revolute">
@@ -413,7 +413,7 @@
         </physics>
       </joint>
 
-      <joint name="front_right_wheel_motor" type="fixed">
+      <joint name="front_right_motor" type="fixed">
         <parent>front_right_axle</parent>
         <child>front_right_wheel</child>
       </joint>
@@ -552,11 +552,6 @@
         </collision>
       </link>
 
-      <joint name="front_left_motor" type="fixed">
-        <parent>chassis</parent>
-        <child>front_left_wheel</child>
-      </joint>
-
       <joint name="rear_right_motor" type="fixed">
         <parent>chassis</parent>
         <child>rear_right_wheel</child>
@@ -567,7 +562,17 @@
         <child>rear_left_wheel</child>
       </joint>
 
-      <!-- <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering_kingpin.so"><ros><namespace>test</namespace></ros><front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain><front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain><rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain><rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain><front_steering_pid_gain>2000 0 2</front_steering_pid_gain><rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain></plugin> -->
+      <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering.so">
+        <ros>
+          <namespace>test</namespace>
+        </ros>
+        <front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain>
+        <front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain>
+        <rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain>
+        <rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain>
+        <front_steering_pid_gain>2000 0 2</front_steering_pid_gain>
+        <rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain>
+      </plugin>
     </model>
   </world>
 </sdf>

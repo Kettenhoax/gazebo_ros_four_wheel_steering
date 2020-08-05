@@ -442,7 +442,17 @@
         <child>rear_left_wheel</child>
       </joint>
 
-      <!-- <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering_kingpin.so"><ros><namespace>test</namespace></ros><front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain><front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain><rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain><rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain><front_steering_pid_gain>2000 0 2</front_steering_pid_gain><rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain></plugin> -->
+      <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering.so">
+        <ros>
+          <namespace>test</namespace>
+        </ros>
+        <front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain>
+        <front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain>
+        <rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain>
+        <rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain>
+        <front_steering_pid_gain>2000 0 2</front_steering_pid_gain>
+        <rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain>
+      </plugin>
     </model>
   </world>
 </sdf>
