@@ -34,14 +34,14 @@
         <visual name="chassis_visual">
           <geometry>
             <box>
-              <size>2.0 1 0.6</size>
+              <size>2.0 0.8 0.6</size>
             </box>
           </geometry>
         </visual>
         <collision name="chassis">
           <geometry>
             <box>
-              <size>2.0 1 0.6</size>
+              <size>2.0 0.8 0.6</size>
             </box>
           </geometry>
         </collision>
@@ -57,7 +57,7 @@ axle_to_wheel = 0.22
 axle_x_offset = wheel_x
 axle_y_offset = wheel_y_offset - axle_to_wheel
 
-steering_socket_x = 0.5
+steering_socket_x = 0.48
 socket_side_x = 0.1
 socket_side_x_offset = steering_socket_x + socket_side_x
 socket_side_y_offset = 0.075
@@ -268,7 +268,7 @@ steering.keys.each do |s|
           </limit>
           <dynamics>
             <damping>1</damping>
-            <friction>0</friction>
+            <friction>2</friction>
           </dynamics>
         </axis>
         <physics>
