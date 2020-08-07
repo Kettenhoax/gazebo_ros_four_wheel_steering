@@ -19,6 +19,7 @@ find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(four_wheel_steering_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(xacro REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED src/plugin.cpp src/controller.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
@@ -62,6 +63,27 @@ endif()
 install(TARGETS ${PROJECT_NAME}
    DESTINATION lib
 )
+
+install(DIRECTORY urdf
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+set(TEST_MODEL_DIR share/${PROJECT_NAME}/models/gazebo_ros_four_wheel_steering_test_vehicle)
+
+install(FILES test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.config
+  DESTINATION ${TEST_MODEL_DIR})
+
+xacro_add_files(test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.urdf.xacro
+  REMAP xacro_prefix:=${CMAKE_SOURCE_DIR}
+  TARGET model.urdf
+  INSTALL DESTINATION models/gazebo_ros_four_wheel_steering_test_vehicle)
+
+add_custom_command(OUTPUT ${TEST_MODEL_DIR}/model.sdf
+  COMMAND gz server -p ${TEST_MODEL_DIR}/model.urdf > ${TEST_MODEL_DIR}/model.sdf
+  MAIN DEPENDENCY ${TEST_MODEL_DIR}/model.urdf
+  COMMENT "Generating model.sdf")
+
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
 
 ament_export_libraries(${PROJECT_NAME})
 ament_package()

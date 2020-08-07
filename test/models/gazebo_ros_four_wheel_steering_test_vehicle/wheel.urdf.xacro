@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot
+    xmlns:xacro="http://ros.org/wiki/xacro"
+    name="wheel">
+  <xacro:property
+      name="drive_max_nm"
+      value="755" />
+  <xacro:property
+      name="drive_max_radps"
+      value="6.358" />
+
+  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.urdf.xacro" />
+
+  <xacro:macro
+      name="wheel"
+      params="wheel_prefix parent_link *origin">
+    <link name="${wheel_prefix}_wheel_link">
+      <xacro:cylinder_primitive
+          length="${wheel_length}"
+          radius="${wheel_radius}" />
+
+      <!-- scale down wheel_radius to concentrate inertia to center of wheel -->
+      <xacro:cylinder_inertial_with_origin
+          radius="${wheel_radius * 0.8}"
+          length="${wheel_length}"
+          mass="${mass_wheel}">
+        <origin xyz="0 0 0" />
+      </xacro:cylinder_inertial_with_origin>
+    </link>
+
+    <joint
+        name="${wheel_prefix}_wheel"
+        type="continuous">
+      <parent link="${parent_link}" />
+      <child link="${wheel_prefix}_wheel_link" />
+      <xacro:insert_block name="origin" />
+      <limit
+          effort="${drive_max_nm}"
+          velocity="${drive_max_radps}" />
+      <axis xyz="0 0 -1" />
+      <dynamics friction="12" />
+    </joint>
+  </xacro:macro>
+</robot>

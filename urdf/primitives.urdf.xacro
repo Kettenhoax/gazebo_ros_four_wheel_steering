@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="box_primitive" params="x y z">
+    <visual>
+      <geometry>
+        <box size="${x} ${y} ${z}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+          <box size="${x} ${y} ${z}" />
+      </geometry>
+    </collision>
+  </xacro:macro>
+  <xacro:macro name="cylinder_primitive" params="length radius">
+    <visual>
+      <geometry>
+        <cylinder length="${length}" radius="${radius}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="${length}" radius="${radius}" />
+      </geometry>
+    </collision>
+  </xacro:macro>
+</robot>

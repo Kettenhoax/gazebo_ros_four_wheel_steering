@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<sdf xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro
+      name="sdf_box_primitive"
+      params="name x y z">
+    <visual name="${name}_visual">
+      <geometry>
+        <box>
+          <size>${x} ${y} ${z}</size>
+        </box>
+      </geometry>
+    </visual>
+    <collision name="${name}_collision">
+      <geometry>
+        <box>
+          <size>${x} ${y} ${z}</size>
+        </box>
+      </geometry>
+    </collision>
+  </xacro:macro>
+  <xacro:macro
+      name="sdf_cylinder_primitive"
+      params="name length radius">
+    <visual name="${name}_visual">
+      <geometry>
+        <cylinder>
+          <radius>${radius}</radius>
+          <length>${length}</length>
+        </cylinder>
+      </geometry>
+    </visual>
+    <collision name="${name}_collision">
+      <geometry>
+        <cylinder>
+          <radius>${radius}</radius>
+          <length>${length}</length>
+        </cylinder>
+      </geometry>
+    </collision>
+  </xacro:macro>
+  <xacro:macro
+      name="sdf_sphere_primitive"
+      params="name radius">
+    <visual name="${name}_visual">
+      <geometry>
+        <sphere>
+          <radius>${radius}</radius>
+        </sphere>
+      </geometry>
+    </visual>
+    <collision name="${name}_collision">
+      <geometry>
+        <sphere>
+          <radius>${radius}</radius>
+        </sphere>
+      </geometry>
+    </collision>
+  </xacro:macro>
+</sdf>

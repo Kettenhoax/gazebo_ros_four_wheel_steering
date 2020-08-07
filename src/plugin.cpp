@@ -127,10 +127,10 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   impl_->joint_pids_.resize(6);
 
   std::map<JointIdentifier, std::string> joint_names =
-  {{FRONT_RIGHT, "front_right_motor"},
-    {FRONT_LEFT, "front_left_motor"},
-    {REAR_RIGHT, "rear_right_motor"},
-    {REAR_LEFT, "rear_left_motor"},
+  {{FRONT_RIGHT_MOTOR, "front_right_motor"},
+    {FRONT_LEFT_MOTOR, "front_left_motor"},
+    {REAR_RIGHT_MOTOR, "rear_right_motor"},
+    {REAR_LEFT_MOTOR, "rear_left_motor"},
     {FRONT_STEERING, "front_steering"},
     {REAR_STEERING, "rear_steering"},
   };
@@ -150,7 +150,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     }
   }
 
-  for (size_t i = FRONT_RIGHT; i < FRONT_RIGHT + 4; i++) {
+  for (size_t i = FRONT_RIGHT_MOTOR; i < FRONT_RIGHT_MOTOR + 4; i++) {
     auto id = (JointIdentifier)i;
     auto joint_name = joint_names[id];
     auto default_gain = impl_->joints_[i]->GetVelocityLimit(0) *
@@ -210,13 +210,13 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   // first compute the positions of the 4 wheel centers
   // again assumes wheel link is child of joint and has only one collision
   int collision_id = 0;
-  auto front_right_center_pos = impl_->joints_[FRONT_RIGHT]->
+  auto front_right_center_pos = impl_->joints_[FRONT_RIGHT_MOTOR]->
     GetChild()->GetCollision(collision_id)->WorldPose().Pos();
-  auto front_left_center_pos = impl_->joints_[FRONT_LEFT]->
+  auto front_left_center_pos = impl_->joints_[FRONT_LEFT_MOTOR]->
     GetChild()->GetCollision(collision_id)->WorldPose().Pos();
-  auto rear_right_center_pos = impl_->joints_[REAR_RIGHT]->
+  auto rear_right_center_pos = impl_->joints_[REAR_RIGHT_MOTOR]->
     GetChild()->GetCollision(collision_id)->WorldPose().Pos();
-  auto rear_left_center_pos = impl_->joints_[REAR_LEFT]->
+  auto rear_left_center_pos = impl_->joints_[REAR_LEFT_MOTOR]->
     GetChild()->GetCollision(collision_id)->WorldPose().Pos();
 
   auto distance = front_left_center_pos - front_right_center_pos;
@@ -307,7 +307,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   double cmds[6];
   compute_wheel_targets(last_cmd_, vehicle_, cmds);
 
-  for (size_t wheel_i = FRONT_RIGHT; wheel_i < FRONT_RIGHT + 4; wheel_i++) {
+  for (size_t wheel_i = FRONT_RIGHT_MOTOR; wheel_i < FRONT_RIGHT_MOTOR + 4; wheel_i++) {
     // get wheel speed in rad/s
     auto joint_velocity = joints_[wheel_i]->GetVelocity(0);
     auto wheelspeed_error = joint_velocity - cmds[wheel_i];
@@ -324,16 +324,19 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
     }
   }
 
+  double steering_k = -0.84375;
   for (auto steer_i : {FRONT_STEERING, REAR_STEERING}) {
     auto current_angle = joints_[steer_i]->Position(0);
-    auto angle_error = current_angle - cmds[steer_i];
+    // convert wheel angle to angle on steering motor
+    double steering_motor_cmd = cmds[steer_i] * steering_k;
+    auto angle_error = current_angle - steering_motor_cmd;
     errors[steer_i] = angle_error;
     auto steering_cmd = joint_pids_[steer_i].Update(angle_error, seconds_since_last_update);
     joints_[steer_i]->SetForce(0, steering_cmd);
   }
 
   if (!pid_publishers_.empty()) {
-    for (size_t i = FRONT_RIGHT; i <= REAR_STEERING; i++) {
+    for (size_t i = FRONT_RIGHT_MOTOR; i <= REAR_STEERING; i++) {
       auto pid = joint_pids_[i];
       control_msgs::msg::PidState state;
       state.header.frame_id = robot_base_frame_;
@@ -390,7 +393,7 @@ bool GazeboRosFourWheelSteeringPrivate::InferWheelRadius(double * radius)
   double radii[4];
 
   for (size_t i = 0; i < 4; i++) {
-    const auto & joint = joints_[FRONT_RIGHT + i];
+    const auto & joint = joints_[FRONT_RIGHT_MOTOR + i];
     const auto & collision_object = joint->GetChild()->GetCollision(id);
     auto radius = CollisionRadius(collision_object);
     if (radius < 0.01) {

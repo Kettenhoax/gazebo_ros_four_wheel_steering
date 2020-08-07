@@ -16,6 +16,9 @@ Make sure the package environment is sourced, so the library is on `LD_LIBRARY_P
 To run the test world with Gazebo:
 
 ```bash
+# TODO remove absolute path
+xacro model.urdf.xacro xacro_prefix:=/home/zeilingerm/code/ws/sim/src/gazebo_ros_four_wheel_steering -o model.urdf
+gz sdf
 gazebo --verbose test/worlds/gazebo_ros_four_wheel_steering.world
 ```
 
@@ -29,25 +32,21 @@ The joint names in the following configuration example are the defaults, and the
           <namespace>vehicle</namespace>
         </ros>
 
-        <front_right_wheel>front_right_wheel</front_right_wheel>
-        <front_left_wheel>front_left_wheel</front_left_wheel>
-        <rear_right_wheel>rear_right_wheel</rear_right_wheel>
-        <rear_left_wheel>rear_left_wheel</rear_left_wheel>
+        <front_right_motor>front_right_motor</front_right_motor>
+        <front_left_motor>front_left_motor</front_left_motor>
+        <rear_right_motor>rear_right_motor</rear_right_motor>
+        <rear_left_motor>rear_left_motor</rear_left_motor>
 
-        <front_right_steering>front_right_steering</front_right_steering>
-        <front_left_steering>front_left_steering</front_left_steering>
-        <rear_right_steering>rear_right_steering</rear_right_steering>
-        <rear_left_steering>rear_left_steering</rear_left_steering>
+        <front_steering>front_steering</front_steering>
+        <rear_steering>front_steering</rear_steering>
 
-        <front_right_wheel_pid_gain>400 0 1</front_right_wheel_pid_gain>
-        <front_left_wheel_pid_gain>400 0 1</front_left_wheel_pid_gain>
-        <rear_right_wheel_pid_gain>400 0 1</rear_right_wheel_pid_gain>
-        <rear_left_wheel_pid_gain>400 0 1</rear_left_wheel_pid_gain>
+        <front_right_motor_pid_gain>400 0 1</front_right_motor_pid_gain>
+        <front_left_motor_pid_gain>400 0 1</front_left_motor_pid_gain>
+        <rear_right_motor_pid_gain>400 0 1</rear_right_motor_pid_gain>
+        <rear_left_motor_pid_gain>400 0 1</rear_left_motor_pid_gain>
 
-        <front_right_steering_pid_gain>2000 0 2</front_right_steering_pid_gain>
-        <front_left_steering_pid_gain>2000 0 2</front_left_steering_pid_gain>
-        <rear_right_steering_pid_gain>2000 0 2</rear_right_steering_pid_gain>
-        <rear_left_steering_pid_gain>2000 0 2</rear_left_steering_pid_gain>
+        <front_steering_pid_gain>2000 0 2</front_steering_pid_gain>
+        <rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain>
       </plugin>
       ...
 </model>

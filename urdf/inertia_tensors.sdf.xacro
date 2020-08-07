@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="sdf_zero_mass">
+    <inertial>
+      <mass>0</mass>
+      <pose>0 0 0 0 0 0</pose>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="sdf_box_inertia" params="x y z mass">
+    <inertial>
+      <mass>${mass}</mass>
+      <inertia>
+        <ixx>${0.0833333 * mass * (y*y + z*z)}</ixx>
+        <iyy>${0.0833333 * mass * (x*x + z*z)}</iyy>
+        <izz>${0.0833333 * mass * (x*x + y*y)}</izz>
+        <ixy>0.0</ixy>
+        <ixz>0.0</ixz>
+        <iyz>0.0</iyz>
+      </inertia>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="sdf_sphere_inertia" params="radius mass">
+    <inertial>
+      <mass>${mass}</mass>
+      <inertia>
+        <ixx>${0.4 * mass * radius * radius}</ixx>
+        <iyy>${0.4 * mass * radius * radius}</iyy>
+        <izz>${0.4 * mass * radius * radius}</izz>
+        <ixy>0.0</ixy>
+        <ixz>0.0</ixz>
+        <iyz>0.0</iyz>
+      </inertia>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="sdf_box_inertia_with_pose" params="x y z mass *pose">
+    <inertial>
+      <mass>${mass}</mass>
+      <xacro:insert_block name="pose" />
+      <inertia>
+        <ixx>${0.0833333 * mass * (y*y + z*z)}</ixx>
+        <iyy>${0.0833333 * mass * (x*x + z*z)}</iyy>
+        <izz>${0.0833333 * mass * (x*x + y*y)}</izz>
+        <ixy>0.0</ixy>
+        <ixz>0.0</ixz>
+        <iyz>0.0</iyz>
+      </inertia>
+    </inertial>
+  </xacro:macro>
+</robot>

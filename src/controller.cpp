@@ -93,19 +93,19 @@ void compute_wheel_targets(
       vehicle.wheel_radius;
     const double sign = copysign(1.0, cmd_4ws.speed);
 
-    cmds[FRONT_LEFT] = sign * std::hypot(
+    cmds[FRONT_LEFT_MOTOR] = sign * std::hypot(
       (cmd_4ws.speed - angular_speed_cmd * steering_track / 2),
       (l_front * angular_speed_cmd)) / vehicle.wheel_radius -
       vel_steering_offset;
-    cmds[FRONT_RIGHT] = sign * std::hypot(
+    cmds[FRONT_RIGHT_MOTOR] = sign * std::hypot(
       (cmd_4ws.speed + angular_speed_cmd * steering_track / 2),
       (l_front * angular_speed_cmd)) / vehicle.wheel_radius +
       vel_steering_offset;
-    cmds[REAR_LEFT] = sign * std::hypot(
+    cmds[REAR_LEFT_MOTOR] = sign * std::hypot(
       (cmd_4ws.speed - angular_speed_cmd * steering_track / 2),
       (l_rear * angular_speed_cmd)) / vehicle.wheel_radius -
       vel_steering_offset;
-    cmds[REAR_RIGHT] = sign * std::hypot(
+    cmds[REAR_RIGHT_MOTOR] = sign * std::hypot(
       (cmd_4ws.speed + angular_speed_cmd * steering_track / 2),
       (l_rear * angular_speed_cmd)) / vehicle.wheel_radius +
       vel_steering_offset;

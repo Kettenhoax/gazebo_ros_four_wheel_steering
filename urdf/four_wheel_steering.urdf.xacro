@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(arg xacro_prefix)/urdf/axle.urdf.xacro" />
+  <xacro:macro
+      name="four_wheel_steering"
+      params="front_parent rear_parent front_origin_x rear_origin_x axle_x gear_x socket_x socket_y z">
+    <xacro:axle
+        prefix="front"
+        parent="${front_parent}"
+        is_front="1"
+        x="${axle_x}"
+        gear_x="${gear_x}"
+        socket_x="${socket_x}"
+        socket_y="${socket_y}"
+        z="${z}">
+      <origin xyz="${front_origin_x} 0 ${z}" />
+    </xacro:axle>
+    <xacro:axle
+        prefix="rear"
+        parent="${rear_parent}"
+        is_front="-1"
+        x="${axle_x}"
+        gear_x="${gear_x}"
+        socket_x="${socket_x}"
+        socket_y="${socket_y}"
+        z="${z}">
+      <origin xyz="${rear_origin_x} 0 ${z}" />
+    </xacro:axle>
+  </xacro:macro>
+</robot>

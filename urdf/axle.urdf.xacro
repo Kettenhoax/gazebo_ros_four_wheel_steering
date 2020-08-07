@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property
+      name="gear_size"
+      value="0.1" />
+
+  <xacro:include filename="$(arg xacro_prefix)/urdf/wheel_steered.urdf.xacro" />
+  <xacro:include filename="$(arg xacro_prefix)/urdf/steering_rod.sdf.xacro" />
+  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.sdf.xacro" />
+  <xacro:include filename="$(arg xacro_prefix)/urdf/inertia_tensors.sdf.xacro" />
+
+  <!--
+  prefix: front, rear
+  parent link: should be vehicle chassis
+  is_front: 1 for front, -1 for rear
+  gear_x: offset from axle x position to gear x position, typically negative
+  socket_x: offset from gear to rod socket x position
+  socket_y: offset from gear to rod socket y position
+  -->
+  <xacro:macro
+      name="axle"
+      params="prefix parent is_front x gear_x socket_x socket_y z *origin">
+
+    <xacro:wheel_steered
+        wheel_prefix="${prefix}_left"
+        parent_link="${parent}"
+        left_right="1">
+      <xacro:insert_block name="origin" />
+    </xacro:wheel_steered>
+
+    <xacro:wheel_steered
+        wheel_prefix="${prefix}_right"
+        parent_link="${parent}"
+        left_right="-1">
+      <xacro:insert_block name="origin" />
+    </xacro:wheel_steered>
+
+    <!-- SDF-only steering system -->
+    <gazebo>
+      <link name="${prefix}_steering_gear">
+        <pose>
+          ${x + gear_x} 0 ${z} 0 0 0
+        </pose>
+        <xacro:sdf_box_inertia
+            x="${gear_size}"
+            y="${gear_size}"
+            z="${gear_size}"
+            mass="1" />
+        <xacro:sdf_cylinder_primitive
+            name="${prefix}"
+            length="${gear_size}"
+            radius="${gear_size}" />
+      </link>
+
+      <joint
+          name="${prefix}_steering"
+          type="revolute">
+        <parent>chassis</parent>
+        <child>${prefix}_steering_gear</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1.5</lower>
+            <upper>1.5</upper>
+            <effort>2000</effort>
+            <velocity>1.24</velocity>
+          </limit>
+          <dynamics>
+            <damping>1</damping>
+            <friction>2</friction>
+          </dynamics>
+        </axis>
+        <physics>
+          <ode>
+            <cfm_damping>1</cfm_damping>
+          </ode>
+        </physics>
+      </joint>
+      <xacro:steering_rod
+          prefix="${prefix}_left"
+          gear_x="${is_front * (x + gear_x)}"
+          rod_x="${is_front * (x + gear_x + socket_x)}"
+          rod_y="${is_front * socket_y}"
+          z="${z}" />
+      <xacro:steering_rod
+          prefix="${prefix}_right"
+          gear_x="${is_front * (x + gear_x)}"
+          rod_x="${is_front * (x + gear_x + socket_x)}"
+          rod_y="${is_front * -socket_y}"
+          z="${z}" />
+    </gazebo>
+
+  </xacro:macro>
+</robot>

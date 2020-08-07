@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<robot
+    name="gazebo_ros_four_wheel_steering_test_vehicle"
+    xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(arg xacro_prefix)/urdf/four_wheel_steering.urdf.xacro" />
+  <xacro:include filename="$(arg xacro_prefix)/urdf/inertia_tensors.urdf.xacro" />
+  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.urdf.xacro" />
+  <xacro:include filename="wheel.urdf.xacro" />
+
+  <xacro:property
+      name="wheel_track"
+      value="1.6" />
+  <xacro:property
+      name="wheel_base"
+      value="1.5" />
+
+  <link name="chassis">
+    <xacro:box_inertial_with_origin
+        mass="100.0"
+        x="2"
+        y="0.8"
+        z="0.6">
+      <origin xyz="-0.05 0 -0.1" />
+    </xacro:box_inertial_with_origin>
+    <xacro:box_primitive
+        x="2"
+        y="0.8"
+        z="0.6" />
+  </link>
+
+  <xacro:property
+      name="wheel_length"
+      value="0.29" />
+  <xacro:property
+      name="wheel_radius"
+      value="0.3495" />
+  <!-- mass of tires including wheel rim -->
+  <xacro:property
+      name="mass_wheel"
+      value="30.0" />
+
+  <xacro:four_wheel_steering
+      front_parent="chassis"
+      rear_parent="chassis"
+      front_origin_x="${wheel_track / 2}"
+      rear_origin_x="${-wheel_track / 2}"
+      axle_x="${wheel_track / 2}"
+      gear_x="0.48"
+      socket_x="-0.1"
+      socket_y="0.075"
+      z="0" />
+
+  <xacro:wheel
+      wheel_prefix="front_left"
+      parent_link="front_left_axle">
+    <origin
+        xyz="0 ${0.156911} 0"
+        rpy="${pi/2} 0 0" />
+  </xacro:wheel>
+
+  <xacro:wheel
+      wheel_prefix="front_right"
+      parent_link="front_right_axle">
+    <origin
+        xyz="0 ${-0.156911} 0"
+        rpy="${pi/2} 0 0" />
+  </xacro:wheel>
+
+  <xacro:wheel
+      wheel_prefix="rear_left"
+      parent_link="rear_left_axle">
+    <origin
+        xyz="0 ${0.156911} 0"
+        rpy="${pi/2} 0 0" />
+  </xacro:wheel>
+
+  <xacro:wheel
+      wheel_prefix="rear_right"
+      parent_link="rear_right_axle">
+    <origin
+        xyz="0 ${-0.156911} 0"
+        rpy="${pi/2} 0 0" />
+  </xacro:wheel>
+
+  <gazebo>
+    <plugin
+        name="gazebo_ros_4ws"
+        filename="libgazebo_ros_four_wheel_steering.so">
+      <ros>
+        <namespace>test</namespace>
+      </ros>
+      <front_right_motor_pid_gain>400 0 1</front_right_motor_pid_gain>
+      <front_left_motor_pid_gain>400 0 1</front_left_motor_pid_gain>
+      <rear_right_motor_pid_gain>400 0 1</rear_right_motor_pid_gain>
+      <rear_left_motor_pid_gain>400 0 1</rear_left_motor_pid_gain>
+      <front_steering_pid_gain>2000 0 2</front_steering_pid_gain>
+      <rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain>
+    </plugin>
+  </gazebo>
+</robot>

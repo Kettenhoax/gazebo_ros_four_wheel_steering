@@ -23,17 +23,17 @@ class GazeboRosFourWheelSteeringPrivate;
 
 enum JointIdentifier
 {
-  /// Front right wheel
-  FRONT_RIGHT,
+  /// Front right traction motor
+  FRONT_RIGHT_MOTOR,
 
-  /// Front left wheel
-  FRONT_LEFT,
+  /// Front left traction motor
+  FRONT_LEFT_MOTOR,
 
-  /// Rear right wheel
-  REAR_RIGHT,
+  /// Rear right traction motor
+  REAR_RIGHT_MOTOR,
 
-  /// Rear left wheel
-  REAR_LEFT,
+  /// Rear left traction motor
+  REAR_LEFT_MOTOR,
 
   /// Front steering
   FRONT_STEERING,
