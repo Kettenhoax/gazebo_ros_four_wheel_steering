@@ -68,20 +68,27 @@ install(DIRECTORY urdf
   DESTINATION share/${PROJECT_NAME}/
 )
 
-set(TEST_MODEL_DIR share/${PROJECT_NAME}/models/gazebo_ros_four_wheel_steering_test_vehicle)
+set(TEST_MODEL_DIR test/models/gazebo_ros_four_wheel_steering_test_vehicle)
+set(INSTALL_MODEL_DIR share/${PROJECT_NAME}/models/gazebo_ros_four_wheel_steering_test_vehicle)
 
-install(FILES test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.config
-  DESTINATION ${TEST_MODEL_DIR})
+install(FILES ${TEST_MODEL_DIR}/model.config DESTINATION ${INSTALL_MODEL_DIR})
 
 xacro_add_files(test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.urdf.xacro
   REMAP xacro_prefix:=${CMAKE_SOURCE_DIR}
   TARGET model.urdf
   INSTALL DESTINATION models/gazebo_ros_four_wheel_steering_test_vehicle)
 
-add_custom_command(OUTPUT ${TEST_MODEL_DIR}/model.sdf
-  COMMAND gz server -p ${TEST_MODEL_DIR}/model.urdf > ${TEST_MODEL_DIR}/model.sdf
-  MAIN DEPENDENCY ${TEST_MODEL_DIR}/model.urdf
+add_custom_command(OUTPUT model.sdf
+  COMMAND gz sdf -p model.urdf > model.sdf
+  # MAIN DEPENDENCY ${TEST_MODEL_DIR}/model.urdf
+  DEPENDS ${PROJECT_NAME}_model.urdf
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MODEL_DIR}
   COMMENT "Generating model.sdf")
+
+add_custom_target(sdf ALL DEPENDS model.sdf)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MODEL_DIR}/model.sdf
+  DESTINATION ${INSTALL_MODEL_DIR})
 
 ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
 
