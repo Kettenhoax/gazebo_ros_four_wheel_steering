@@ -14,7 +14,7 @@
   <xacro:macro
       name="wheel"
       params="wheel_prefix parent_link *origin">
-    <link name="${wheel_prefix}_wheel_link">
+    <link name="${wheel_prefix}_wheel">
       <xacro:cylinder_primitive
           length="${wheel_length}"
           radius="${wheel_radius}" />
@@ -29,10 +29,10 @@
     </link>
 
     <joint
-        name="${wheel_prefix}_wheel"
+        name="${wheel_prefix}_motor"
         type="continuous">
       <parent link="${parent_link}" />
-      <child link="${wheel_prefix}_wheel_link" />
+      <child link="${wheel_prefix}_wheel" />
       <xacro:insert_block name="origin" />
       <limit
           effort="${drive_max_nm}"

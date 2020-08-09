@@ -1,1 +1,3 @@
+# generated from test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.urdf.xacro
 test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.sdf
+test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.urdf
