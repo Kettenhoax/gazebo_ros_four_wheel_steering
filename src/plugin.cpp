@@ -84,7 +84,9 @@ public:
   /// Protect variables accessed on callbacks.
   std::mutex lock_;
 
-  /// Last received command, initialized with zero-speed and zero-angle
+  /// Command in order of reception
+  std::deque<FourWheelSteeringStamped> commands_;
+
   FourWheelSteeringStamped last_cmd_;
 
   /// Update period in seconds.
@@ -93,11 +95,14 @@ public:
   /// Command timeout in seconds
   double command_timeout_;
 
+  /// Artificial latency to application of a received command in seconds
+  double latency_;
+
   /// Last update time.
   gazebo::common::Time last_update_time_;
 
   /// Robot base frame ID
-  std::string robot_base_frame_;
+  std::string state_frame_id_;
 
   /// Pointers to wheel joints.
   std::vector<gazebo::physics::JointPtr> joints_;
@@ -281,6 +286,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   }
 
   impl_->command_timeout_ = _sdf->Get<double>("command_timeout", impl_->update_period_ * 2).first;
+  impl_->latency_ = _sdf->Get<double>("latency", 0.0).first;
   impl_->last_update_time_ = _model->GetWorld()->SimTime();
 
   impl_->cmd_sub_ =
@@ -305,7 +311,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     }
   }
 
-  impl_->robot_base_frame_ = _sdf->Get<std::string>("robot_base_frame", "base_footprint").first;
+  impl_->state_frame_id_ = _sdf->Get<std::string>("robot_base_frame", "base_footprint").first;
 
   // Listen to the update event (broadcast every simulation iteration)
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -316,6 +322,7 @@ void GazeboRosFourWheelSteering::Reset()
 {
   impl_->last_update_time_ = impl_->model_->GetWorld()->SimTime();
   impl_->last_cmd_ = FourWheelSteeringStamped();
+  impl_->commands_.clear();
 }
 
 void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
@@ -335,7 +342,12 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
 void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
 {
   auto ros_time = ros_node_->now();
-  if ((ros_time - last_cmd_.header.stamp).seconds() >= command_timeout_) {
+
+  while (!commands_.empty() && (ros_time - commands_.front().header.stamp).seconds() >= latency_) {
+    last_cmd_ = commands_.front();
+    commands_.pop_front();
+  }
+  if ((ros_time - last_cmd_.header.stamp).seconds() >= (latency_ + command_timeout_)) {
     // if the latest command is too old, set speed to zero
     last_cmd_.data.speed = 0;
   }
@@ -393,7 +405,7 @@ void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
     for (size_t i = FRONT_RIGHT_MOTOR; i <= REAR_STEERING; i++) {
       auto pid = joint_pids_[i];
       control_msgs::msg::PidState state;
-      state.header.frame_id = robot_base_frame_;
+      state.header.frame_id = state_frame_id_;
       state.header.stamp = ros_time;
       state.timestep = rclcpp::Duration::from_seconds(dt);
       state.error = errors[i];
@@ -413,7 +425,7 @@ void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
 void GazeboRosFourWheelSteeringPrivate::OnCmd(FourWheelSteeringStamped::SharedPtr msg)
 {
   std::lock_guard<std::mutex> scoped_lock(lock_);
-  last_cmd_ = *msg;
+  commands_.push_back(*msg);
 }
 
 double GazeboRosFourWheelSteeringPrivate::CollisionRadius(

@@ -113,10 +113,11 @@
       <ros>
         <namespace>test</namespace>
       </ros>
-      <front_right_motor_pid_gain>400 0 1</front_right_motor_pid_gain>
-      <front_left_motor_pid_gain>400 0 1</front_left_motor_pid_gain>
-      <rear_right_motor_pid_gain>400 0 1</rear_right_motor_pid_gain>
-      <rear_left_motor_pid_gain>400 0 1</rear_left_motor_pid_gain>
+      <latency>0.32</latency>
+      <front_right_motor_pid_gain>400 10 1</front_right_motor_pid_gain>
+      <front_left_motor_pid_gain>400 10 1</front_left_motor_pid_gain>
+      <rear_right_motor_pid_gain>400 10 1</rear_right_motor_pid_gain>
+      <rear_left_motor_pid_gain>400 10 1</rear_left_motor_pid_gain>
       <front_steering_pid_gain>4000 100 2</front_steering_pid_gain>
       <rear_steering_pid_gain>4000 100 2</rear_steering_pid_gain>
     </plugin>

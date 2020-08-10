@@ -13,13 +13,22 @@ Vehicles are modelled with four steering joints and four wheel joints, which are
 
 Make sure the package environment is sourced, so the library is on `LD_LIBRARY_PATH` when loading a world.
 
-To run the test world with Gazebo:
+## Running
+
+To run the test world with Gazebo.
 
 ```bash
 # 1. build project to generate the test model (gazebo_ros_four_wheel_steering_test_vehicle) on the install path
 # 2. run test world, loading this model
-gazebo --verbose test/worlds/gazebo_ros_four_wheel_steering.world
+gazebo --verbose -s libgazebo_ros_init.so -s libgazebo_ros_factory.so test/worlds/gazebo_ros_four_wheel_steering.world \
+  --ros-args --param publish_rate:=200.0
 ```
+
+To make sure the command timeout and latency simulation work correctly with ROS:
+
+* set `use_sim_time:=true` for the command publisher
+* load the ROS libraries into Gazebo
+* set an appropriate `publish_rate` for `/clock`.
 
 The joint names in the following configuration example are the defaults, and those joints are required for the plugin to work.
 Wheel radius, wheelbase, track and steering offset are determined from the joint distances and collision geometry in the model.
