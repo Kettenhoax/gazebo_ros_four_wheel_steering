@@ -18,8 +18,7 @@
   -->
   <xacro:macro
       name="axle"
-      params="prefix parent x width gear_x socket_x socket_y rod_x rod_y z *origin">
-
+      params="prefix parent x width gear_x socket_x socket_y rod_x rod_y z z_sdf">
     <xacro:wheel_steered
         prefix="${prefix}_left"
         parent_link="${parent}"
@@ -38,7 +37,7 @@
     <gazebo>
       <link name="${prefix}_steering_gear">
         <pose>
-          ${gear_x} 0 ${z} 0 0 0
+          ${gear_x} 0 ${z_sdf} 0 0 0
         </pose>
         <xacro:sdf_box_inertia
             x="${gear_size}"
@@ -54,13 +53,13 @@
       <joint
           name="${prefix}_steering"
           type="revolute">
-        <parent>chassis</parent>
+        <parent>${parent}</parent>
         <child>${prefix}_steering_gear</child>
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
-            <lower>-0.515446875</lower>
-            <upper>0.515446875</upper>
+            <lower>-0.61</lower>
+            <upper>0.61</upper>
             <effort>1000</effort>
             <velocity>1.1914</velocity>
           </limit>
@@ -82,7 +81,7 @@
           socket_y="${socket_y}"
           rod_x="${rod_x}"
           rod_y="${rod_y}"
-          z="${z}" />
+          z="${z_sdf}" />
       <xacro:steering_rod
           front_prefix="${prefix}"
           side_prefix="right"
@@ -90,7 +89,7 @@
           socket_y="${-socket_y}"
           rod_x="${rod_x}"
           rod_y="${-rod_y}"
-          z="${z}" />
+          z="${z_sdf}" />
     </gazebo>
 
   </xacro:macro>

@@ -65,14 +65,14 @@
       rear_parent="chassis"
       front_origin_x="${wheel_base / 2}"
       rear_origin_x="${-wheel_base / 2}"
-      axle_x="${wheel_base / 2}"
       axle_width="${axle_width}"
       gear_x="${gear_x}"
       socket_x="${gear_x + socket_x}"
       socket_y="${socket_y}"
       rod_x="${wheel_base / 2 - 0.125}"
       rod_y="${axle_width / 2 - 0.03}"
-      z="0" />
+      z="0"
+      z_sdf="0" />
 
   <xacro:wheel
       wheel_prefix="front_left"
@@ -110,10 +110,6 @@
     <plugin
         name="gazebo_ros_4ws"
         filename="libgazebo_ros_four_wheel_steering.so">
-      <ros>
-        <namespace>test</namespace>
-      </ros>
-      <latency>0.32</latency>
       <front_right_motor_pid_gain>400 10 1</front_right_motor_pid_gain>
       <front_left_motor_pid_gain>400 10 1</front_left_motor_pid_gain>
       <rear_right_motor_pid_gain>400 10 1</rear_right_motor_pid_gain>

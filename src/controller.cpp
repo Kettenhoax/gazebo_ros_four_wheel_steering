@@ -68,7 +68,7 @@ void compute_wheel_targets(
 
     // convert from wheel angle to steering gear angle
     // TODO compute from steering links and joint positions
-    double steering_gear_k = -0.84375;
+    double steering_gear_k = -1; // -0.84375;
     cmds[FRONT_STEERING] = steering_gear_k * cmd_4ws.front_steering_angle;
     cmds[REAR_STEERING] = steering_gear_k * cmd_4ws.rear_steering_angle;
   }

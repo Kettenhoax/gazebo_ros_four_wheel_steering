@@ -267,6 +267,41 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     impl_->ros_node_->get_logger(),
     "Distance between wheel and steering joint: %.2f", impl_->vehicle_.distance_steering_to_wheel);
 
+  auto rod = _model->GetJoint("front_right_steering_rod");
+  // TODO validate existing joint
+  auto rod_length =
+    rod->GetParent()->WorldPose().Pos().Distance(rod->GetChild()->WorldPose().Pos());
+  RCLCPP_INFO(
+    impl_->ros_node_->get_logger(),
+    "Length of steering rod: %.2f", rod_length);
+
+  auto socket = _model->GetJoint("front_right_steering_connector");
+  // TODO validate existing joint
+  auto socket_distance = socket->GetParent()->WorldPose().Pos().Distance(
+    socket->GetChild()->WorldPose().Pos());
+  RCLCPP_INFO(
+    impl_->ros_node_->get_logger(),
+    "Distance steering gear to rod connection: %.2f", socket_distance);
+
+  auto front_steering_link = _model->GetLink("front_steering_gear");
+  auto rear_steering_link = _model->GetLink("rear_steering_gear");
+  auto steering_gear_distance = front_steering_link->WorldPose().Pos().Distance(
+    rear_steering_link->WorldPose().Pos());
+  RCLCPP_INFO(
+    impl_->ros_node_->get_logger(),
+    "Steering gear distance: %.2f", steering_gear_distance);
+
+  auto front_wheel_link = _model->GetLink("front_left_wheel");
+  auto rear_wheel_link = _model->GetLink("rear_left_wheel");
+  auto front_wheel_x = std::fabs(front_wheel_link->WorldPose().Pos().X());
+  auto rear_wheel_x = std::fabs(rear_wheel_link->WorldPose().Pos().X());
+  if (std::abs(front_wheel_x - rear_wheel_x) > 0.01) {
+    RCLCPP_WARN(
+      impl_->ros_node_->get_logger(),
+      "Axle distance to origin is not equal: %.2f offset front to rear",
+      front_wheel_x - rear_wheel_x);
+  }
+
   // to compute wheelbase, first position of axle centers are computed
   auto front_axle_pos = (front_left_center_pos + front_right_center_pos) / 2;
   auto rear_axle_pos = (rear_left_center_pos + rear_right_center_pos) / 2;

@@ -7,32 +7,32 @@
   -->
   <xacro:macro
       name="four_wheel_steering"
-      params="front_parent rear_parent front_origin_x rear_origin_x axle_width axle_x gear_x socket_x socket_y rod_x rod_y z">
+      params="front_parent rear_parent front_origin_x rear_origin_x axle_width gear_x socket_x socket_y rod_x rod_y z z_sdf">
     <xacro:axle
         prefix="front"
         parent="${front_parent}"
-        x="${axle_x}"
+        x="${front_origin_x}"
         width="${axle_width}"
         gear_x="${gear_x}"
         socket_x="${socket_x}"
         socket_y="${socket_y}"
         rod_x="${rod_x}"
         rod_y="${rod_y}"
-        z="${z}">
-      <origin xyz="${front_origin_x} 0 ${z}" />
+        z="${z}"
+        z_sdf="${z_sdf}">
     </xacro:axle>
     <xacro:axle
         prefix="rear"
         parent="${rear_parent}"
-        x="${-axle_x}"
+        x="${rear_origin_x}"
         width="${axle_width}"
         gear_x="${-gear_x}"
         socket_x="${-socket_x}"
         socket_y="${socket_y}"
         rod_x="${-rod_x}"
         rod_y="${rod_y}"
-        z="${z}">
-      <origin xyz="${rear_origin_x} 0 ${z}" />
+        z="${z}"
+        z_sdf="${z_sdf}">
     </xacro:axle>
   </xacro:macro>
 </robot>
