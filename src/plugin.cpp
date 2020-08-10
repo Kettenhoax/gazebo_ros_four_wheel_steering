@@ -38,6 +38,7 @@ namespace gazebo_plugins
 {
 using ignition::math::Vector3d;
 using ignition::math::Vector2d;
+using gazebo::physics::JointController;
 
 class GazeboRosFourWheelSteeringPrivate
 {
@@ -61,6 +62,10 @@ public:
   /// \return whether the radius can be inferred
   bool InferWheelRadius(double * _radius);
 
+  /// Update joint controller targets
+  /// \param[in] dt Delta time in seconds
+  void UpdateTargets(double);
+
   /// A pointer to the GazeboROS node.
   gazebo_ros::Node::SharedPtr ros_node_;
 
@@ -69,9 +74,6 @@ public:
 
   /// Connection to event called at every world iteration.
   gazebo::event::ConnectionPtr update_connection_;
-
-  /// Pointers to wheel joints.
-  std::vector<gazebo::physics::JointPtr> joints_;
 
   /// Pointer to model.
   gazebo::physics::ModelPtr model_;
@@ -93,8 +95,16 @@ public:
   /// Robot base frame ID
   std::string robot_base_frame_;
 
-  /// PID control for left steering control
+  /// Pointers to wheel joints.
+  std::vector<gazebo::physics::JointPtr> joints_;
+
+  std::vector<std::string> joint_scoped_names_;
+
+  /// PID control parameters
   std::vector<gazebo::common::PID> joint_pids_;
+
+  /// Effort controllers for joints, indices match `JointIdentifier` enu
+  std::vector<std::unique_ptr<JointController>> joint_controllers_;
 
   /// ROS publishers for PID states per joint
   std::vector<rclcpp::Publisher<control_msgs::msg::PidState>::SharedPtr> pid_publishers_;
@@ -107,6 +117,10 @@ GazeboRosFourWheelSteering::GazeboRosFourWheelSteering()
 
 GazeboRosFourWheelSteering::~GazeboRosFourWheelSteering()
 {
+}
+
+static bool IsVelocityJoint(JointIdentifier i) {
+  return i <= REAR_LEFT_MOTOR;
 }
 
 void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -124,7 +138,9 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   // Initialize ROS node
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
   impl_->joints_.resize(6);
+  impl_->joint_scoped_names_.resize(6);
   impl_->joint_pids_.resize(6);
+  impl_->joint_controllers_.resize(6);
 
   std::map<JointIdentifier, std::string> joint_names =
   {{FRONT_RIGHT_MOTOR, "front_right_motor"},
@@ -148,9 +164,10 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
       impl_->ros_node_.reset();
       return;
     }
+    impl_->joint_scoped_names_[id] = impl_->joints_[id]->GetScopedName();
   }
 
-  for (size_t i = FRONT_RIGHT_MOTOR; i < FRONT_RIGHT_MOTOR + 4; i++) {
+  for (size_t i = FRONT_RIGHT_MOTOR; i <= REAR_LEFT_MOTOR; i++) {
     auto id = (JointIdentifier)i;
     auto joint_name = joint_names[id];
     auto default_gain = impl_->joints_[i]->GetVelocityLimit(0) *
@@ -165,9 +182,15 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     auto i_range = _sdf->Get(joint_name + "_i_range", speed_default_range).first;
     impl_->joint_pids_[id].Init(pid.X(), pid.Y(), pid.Z(), i_range.Y(), i_range.X());
 
+    impl_->joint_controllers_[id] = std::make_unique<JointController>(_model);
+    impl_->joint_controllers_[id]->AddJoint(impl_->joints_[id]);
+    impl_->joint_controllers_[id]->SetVelocityPID(
+      impl_->joint_scoped_names_[id],
+      impl_->joint_pids_[id]);
+
     RCLCPP_INFO(
       impl_->ros_node_->get_logger(),
-      "Gains [p %.2f, i %.2f, d %.2f] and integral bounds [%.2f,%.2f] on %s", pid.X(),
+      "Gains [p %.2f, i %.2f, d %.2f] and i_range [%.2f,%.2f] on %s", pid.X(),
       pid.Y(), pid.Z(), i_range.X(), i_range.Y(), joint_name.c_str());
   }
 
@@ -185,9 +208,15 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     auto i_range = _sdf->Get(joint_name + "_i_range", steering_default_range).first;
     impl_->joint_pids_[id].Init(pid.X(), pid.Y(), pid.Z(), i_range.Y(), i_range.X());
 
+    impl_->joint_controllers_[id] = std::make_unique<JointController>(_model);
+    impl_->joint_controllers_[id]->AddJoint(impl_->joints_[id]);
+    impl_->joint_controllers_[id]->SetPositionPID(
+      impl_->joint_scoped_names_[id],
+      impl_->joint_pids_[id]);
+
     RCLCPP_INFO(
       impl_->ros_node_->get_logger(),
-      "Gains [p %.2f, i %.2f, d %.2f] and integral bounds [%.2f,%.2f] on %s", pid.X(),
+      "Gains [p %.2f, i %.2f, d %.2f] and i_range [%.2f,%.2f] on %s", pid.X(),
       pid.Y(), pid.Z(), i_range.X(), i_range.Y(), joint_name.c_str());
   }
 
@@ -296,40 +325,66 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   std::lock_guard<std::mutex> lock(lock_);
   double seconds_since_last_update = (_info.simTime - last_update_time_).Double();
 
-  if (seconds_since_last_update < update_period_) {
-    return;
+  if (seconds_since_last_update >= update_period_) {
+    UpdateTargets(seconds_since_last_update);
+    last_update_time_ = _info.simTime;
+    for (auto & controller : joint_controllers_) {
+      controller->Update();
+    }
   }
+}
+
+void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
+{
   auto ros_time = ros_node_->now();
 
-  std::vector<double> errors;
-  errors.resize(6);
-
+  double errors[6];
   double cmds[6];
   compute_wheel_targets(last_cmd_, vehicle_, cmds);
 
-  for (size_t wheel_i = FRONT_RIGHT_MOTOR; wheel_i < FRONT_RIGHT_MOTOR + 4; wheel_i++) {
+  for (auto wheel_i : {FRONT_RIGHT_MOTOR, FRONT_LEFT_MOTOR, REAR_RIGHT_MOTOR, REAR_LEFT_MOTOR}) {
     // get wheel speed in rad/s
     auto joint_velocity = joints_[wheel_i]->GetVelocity(0);
-    auto wheelspeed_error = joint_velocity - cmds[wheel_i];
-    errors[wheel_i] = wheelspeed_error;
-    double wheelspeed_cmd =
-      joint_pids_[wheel_i].Update(wheelspeed_error, seconds_since_last_update);
+    errors[wheel_i] = joint_velocity - cmds[wheel_i];
+
     // set wheel speed efforts
-    if (ignition::math::v4::isnan(wheelspeed_cmd)) {
+    if (ignition::math::v4::isnan(cmds[wheel_i])) {
       RCLCPP_WARN(
         ros_node_->get_logger(),
-        "PID computed NaN command for [%lu]", wheel_i);
-    } else {
-      joints_[wheel_i]->SetForce(0, wheelspeed_cmd);
+        "NaN command for joint [%s]", joints_[wheel_i]->GetName().c_str());
+      cmds[wheel_i] = 0.0;
+    }
+
+    if (!joint_controllers_[wheel_i]->SetVelocityTarget(
+        joint_scoped_names_[wheel_i],
+        cmds[wheel_i]))
+    {
+      RCLCPP_ERROR(
+        ros_node_->get_logger(),
+        "Joint [%s] was not found", joint_scoped_names_[wheel_i]);
     }
   }
 
   for (auto steer_i : {FRONT_STEERING, REAR_STEERING}) {
     auto current_angle = joints_[steer_i]->Position(0);
-    auto angle_error = current_angle - cmds[steer_i];
-    errors[steer_i] = angle_error;
-    auto steering_cmd = joint_pids_[steer_i].Update(angle_error, seconds_since_last_update);
-    joints_[steer_i]->SetForce(0, steering_cmd);
+    errors[steer_i] = current_angle - cmds[steer_i];
+
+    // set wheel speed efforts
+    if (ignition::math::v4::isnan(cmds[steer_i])) {
+      RCLCPP_WARN(
+        ros_node_->get_logger(),
+        "NaN command for joint [%s]", joints_[steer_i]->GetName().c_str());
+      cmds[steer_i] = 0.0;
+    }
+
+    if (!joint_controllers_[steer_i]->SetPositionTarget(
+        joint_scoped_names_[steer_i],
+        cmds[steer_i]))
+    {
+      RCLCPP_ERROR(
+        ros_node_->get_logger(),
+        "Joint [%s] was not found", joint_scoped_names_[steer_i]);
+    }
   }
 
   if (!pid_publishers_.empty()) {
@@ -338,7 +393,7 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
       control_msgs::msg::PidState state;
       state.header.frame_id = robot_base_frame_;
       state.header.stamp = ros_time;
-      state.timestep = rclcpp::Duration::from_seconds(seconds_since_last_update);
+      state.timestep = rclcpp::Duration::from_seconds(dt);
       state.error = errors[i];
       state.error_dot = NAN;
       pid.GetErrors(state.p_error, state.i_error, state.d_error);
@@ -351,8 +406,6 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
       pid_publishers_[i]->publish(state);
     }
   }
-
-  last_update_time_ = _info.simTime;
 }
 
 void GazeboRosFourWheelSteeringPrivate::OnCmd(
