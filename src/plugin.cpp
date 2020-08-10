@@ -28,7 +28,7 @@
 #include <gazebo_ros/conversions/builtin_interfaces.hpp>
 #include <gazebo_ros/conversions/geometry_msgs.hpp>
 #include <gazebo_ros/node.hpp>
-#include <four_wheel_steering_msgs/msg/four_wheel_steering.hpp>
+#include <four_wheel_steering_msgs/msg/four_wheel_steering_stamped.hpp>
 #include <control_msgs/msg/pid_state.hpp>
 
 #include "gazebo_ros_four_wheel_steering/plugin.hpp"
@@ -39,6 +39,7 @@ namespace gazebo_plugins
 using ignition::math::Vector3d;
 using ignition::math::Vector2d;
 using gazebo::physics::JointController;
+using four_wheel_steering_msgs::msg::FourWheelSteeringStamped;
 
 class GazeboRosFourWheelSteeringPrivate
 {
@@ -49,7 +50,7 @@ public:
 
   /// Callback when a drive command is received.
   /// \param[in] _msg FourWheelSteering command message.
-  void OnCmd(four_wheel_steering_msgs::msg::FourWheelSteering::SharedPtr _msg);
+  void OnCmd(FourWheelSteeringStamped::SharedPtr _msg);
 
   /// Extracts radius of a cylinder or sphere collision shape
   /// \param[in] _coll Pointer to collision
@@ -70,7 +71,7 @@ public:
   gazebo_ros::Node::SharedPtr ros_node_;
 
   /// Subscriber to command velocities
-  rclcpp::Subscription<four_wheel_steering_msgs::msg::FourWheelSteering>::SharedPtr cmd_sub_;
+  rclcpp::Subscription<FourWheelSteeringStamped>::SharedPtr cmd_sub_;
 
   /// Connection to event called at every world iteration.
   gazebo::event::ConnectionPtr update_connection_;
@@ -84,10 +85,13 @@ public:
   std::mutex lock_;
 
   /// Last received command, initialized with zero-speed and zero-angle
-  four_wheel_steering_msgs::msg::FourWheelSteering last_cmd_;
+  FourWheelSteeringStamped last_cmd_;
 
   /// Update period in seconds.
   double update_period_;
+
+  /// Command timeout in seconds
+  double command_timeout_;
 
   /// Last update time.
   gazebo::common::Time last_update_time_;
@@ -141,10 +145,6 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   auto world = impl_->model_->GetWorld();
   auto physicsEngine = world->Physics();
   physicsEngine->SetParam("friction_model", std::string("cone_model"));
-
-  impl_->last_cmd_.speed = 0;
-  impl_->last_cmd_.front_steering_angle = 0;
-  impl_->last_cmd_.rear_steering_angle = 0;
 
   // Initialize ROS node
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
@@ -279,10 +279,12 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
   } else {
     impl_->update_period_ = 0.0;
   }
+
+  impl_->command_timeout_ = _sdf->Get<double>("command_timeout", impl_->update_period_ * 2).first;
   impl_->last_update_time_ = _model->GetWorld()->SimTime();
 
   impl_->cmd_sub_ =
-    impl_->ros_node_->create_subscription<four_wheel_steering_msgs::msg::FourWheelSteering>(
+    impl_->ros_node_->create_subscription<FourWheelSteeringStamped>(
     "cmd_4ws", rclcpp::QoS(rclcpp::KeepLast(1)),
     std::bind(&GazeboRosFourWheelSteeringPrivate::OnCmd, impl_.get(), std::placeholders::_1));
 
@@ -313,9 +315,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 void GazeboRosFourWheelSteering::Reset()
 {
   impl_->last_update_time_ = impl_->model_->GetWorld()->SimTime();
-  impl_->last_cmd_.speed = 0;
-  impl_->last_cmd_.front_steering_angle = 0;
-  impl_->last_cmd_.rear_steering_angle = 0;
+  impl_->last_cmd_ = FourWheelSteeringStamped();
 }
 
 void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
@@ -335,10 +335,14 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
 void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
 {
   auto ros_time = ros_node_->now();
+  if ((ros_time - last_cmd_.header.stamp).seconds() >= command_timeout_) {
+    // if the latest command is too old, set speed to zero
+    last_cmd_.data.speed = 0;
+  }
 
   double errors[6];
   double cmds[6];
-  compute_wheel_targets(last_cmd_, vehicle_, cmds);
+  compute_wheel_targets(last_cmd_.data, vehicle_, cmds);
 
   for (auto wheel_i : {FRONT_RIGHT_MOTOR, FRONT_LEFT_MOTOR, REAR_RIGHT_MOTOR, REAR_LEFT_MOTOR}) {
     // get wheel speed in rad/s
@@ -406,8 +410,7 @@ void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
   }
 }
 
-void GazeboRosFourWheelSteeringPrivate::OnCmd(
-  const four_wheel_steering_msgs::msg::FourWheelSteering::SharedPtr msg)
+void GazeboRosFourWheelSteeringPrivate::OnCmd(FourWheelSteeringStamped::SharedPtr msg)
 {
   std::lock_guard<std::mutex> scoped_lock(lock_);
   last_cmd_ = *msg;
