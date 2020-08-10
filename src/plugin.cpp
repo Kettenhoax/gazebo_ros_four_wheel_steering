@@ -119,8 +119,19 @@ GazeboRosFourWheelSteering::~GazeboRosFourWheelSteering()
 {
 }
 
-static bool IsVelocityJoint(JointIdentifier i) {
+static bool IsVelocityJoint(JointIdentifier i)
+{
   return i <= REAR_LEFT_MOTOR;
+}
+
+static double GetVelocityJointDefaultGain(gazebo::physics::JointPtr joint)
+{
+  return joint->GetVelocityLimit(0) * joint->GetEffortLimit(0);
+}
+
+static double GetPositionJointDefaultGain(gazebo::physics::JointPtr joint)
+{
+  return joint->UpperLimit(0) * joint->GetEffortLimit(0);
 }
 
 void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -167,37 +178,16 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     impl_->joint_scoped_names_[id] = impl_->joints_[id]->GetScopedName();
   }
 
-  for (size_t i = FRONT_RIGHT_MOTOR; i <= REAR_LEFT_MOTOR; i++) {
+  for (auto i :
+    {FRONT_RIGHT_MOTOR, FRONT_LEFT_MOTOR, REAR_RIGHT_MOTOR, REAR_LEFT_MOTOR, FRONT_STEERING,
+      REAR_STEERING})
+  {
     auto id = (JointIdentifier)i;
     auto joint_name = joint_names[id];
-    auto default_gain = impl_->joints_[i]->GetVelocityLimit(0) *
-      impl_->joints_[i]->GetEffortLimit(0);
-    if (ignition::math::v4::isnan(default_gain)) {
-      default_gain = 1.0;
-    }
-    auto speed_default_pid = Vector3d(default_gain, 0.0, 0.0);
-    auto speed_default_range = Vector2d(-default_gain, default_gain);
-
-    auto pid = _sdf->Get(joint_name + "_pid_gain", speed_default_pid).first;
-    auto i_range = _sdf->Get(joint_name + "_i_range", speed_default_range).first;
-    impl_->joint_pids_[id].Init(pid.X(), pid.Y(), pid.Z(), i_range.Y(), i_range.X());
-
-    impl_->joint_controllers_[id] = std::make_unique<JointController>(_model);
-    impl_->joint_controllers_[id]->AddJoint(impl_->joints_[id]);
-    impl_->joint_controllers_[id]->SetVelocityPID(
-      impl_->joint_scoped_names_[id],
-      impl_->joint_pids_[id]);
-
-    RCLCPP_INFO(
-      impl_->ros_node_->get_logger(),
-      "Gains [p %.2f, i %.2f, d %.2f] and i_range [%.2f,%.2f] on %s", pid.X(),
-      pid.Y(), pid.Z(), i_range.X(), i_range.Y(), joint_name.c_str());
-  }
-
-  for (auto i : {FRONT_STEERING, REAR_STEERING}) {
-    auto id = (JointIdentifier)i;
-    auto joint_name = joint_names[id];
-    auto default_gain = impl_->joints_[i]->UpperLimit(0) * impl_->joints_[i]->GetEffortLimit(0);
+    auto default_gain =
+      IsVelocityJoint(i) ? GetVelocityJointDefaultGain(impl_->joints_[i]) :
+      GetPositionJointDefaultGain(
+      impl_->joints_[i]);
     if (ignition::math::v4::isnan(default_gain)) {
       default_gain = 1.0;
     }
@@ -210,9 +200,17 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
     impl_->joint_controllers_[id] = std::make_unique<JointController>(_model);
     impl_->joint_controllers_[id]->AddJoint(impl_->joints_[id]);
-    impl_->joint_controllers_[id]->SetPositionPID(
-      impl_->joint_scoped_names_[id],
-      impl_->joint_pids_[id]);
+
+    if (IsVelocityJoint(id)) {
+      impl_->joint_controllers_[id]->SetVelocityPID(
+        impl_->joint_scoped_names_[id],
+        impl_->joint_pids_[id]);
+
+    } else {
+      impl_->joint_controllers_[id]->SetPositionPID(
+        impl_->joint_scoped_names_[id],
+        impl_->joint_pids_[id]);
+    }
 
     RCLCPP_INFO(
       impl_->ros_node_->get_logger(),
