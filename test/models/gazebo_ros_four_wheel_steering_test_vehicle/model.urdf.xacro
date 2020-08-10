@@ -9,15 +9,15 @@
 
   <xacro:property
       name="axle_width"
-      value="1.06" />
+      value="1" />
 
   <xacro:property
       name="axle_wheel_offset_y"
-      value="0.06" />
+      value="0.09" />
 
   <xacro:property
       name="wheel_base"
-      value="1.1" />
+      value="1.42" />
 
   <link name="chassis">
     <xacro:box_inertial_with_origin
@@ -46,6 +46,20 @@
       name="mass_wheel"
       value="30.0" />
 
+  <xacro:property
+    name="steering_gear_triangle_length"
+    value="0.1" />
+  <xacro:property
+    name="socket_x"
+    value="${steering_gear_triangle_length * sin(60 / 180 * pi)}" />
+  <xacro:property
+    name="socket_y"
+    value="${steering_gear_triangle_length * cos(60 / 180 * pi)}" />
+
+  <xacro:property
+    name="gear_x"
+    value="${wheel_base / 2 - 0.25}" />
+
   <xacro:four_wheel_steering
       front_parent="chassis"
       rear_parent="chassis"
@@ -53,11 +67,11 @@
       rear_origin_x="${-wheel_base / 2}"
       axle_x="${wheel_base / 2}"
       axle_width="${axle_width}"
-      gear_x="${wheel_base / 2 - 0.25}"
-      socket_x="${wheel_base / 2 - 0.25 + 0.08}"
-      socket_y="0.06"
+      gear_x="${gear_x}"
+      socket_x="${gear_x + socket_x}"
+      socket_y="${socket_y}"
       rod_x="${wheel_base / 2 - 0.125}"
-      rod_y="${axle_width / 2}"
+      rod_y="${axle_width / 2 - 0.03}"
       z="0" />
 
   <xacro:wheel
@@ -103,8 +117,8 @@
       <front_left_motor_pid_gain>400 0 1</front_left_motor_pid_gain>
       <rear_right_motor_pid_gain>400 0 1</rear_right_motor_pid_gain>
       <rear_left_motor_pid_gain>400 0 1</rear_left_motor_pid_gain>
-      <front_steering_pid_gain>2000 0 2</front_steering_pid_gain>
-      <rear_steering_pid_gain>2000 0 2</rear_steering_pid_gain>
+      <front_steering_pid_gain>4000 100 2</front_steering_pid_gain>
+      <rear_steering_pid_gain>4000 100 2</rear_steering_pid_gain>
     </plugin>
   </gazebo>
 </robot>

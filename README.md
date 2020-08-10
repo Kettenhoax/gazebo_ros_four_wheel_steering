@@ -16,13 +16,13 @@ Make sure the package environment is sourced, so the library is on `LD_LIBRARY_P
 To run the test world with Gazebo:
 
 ```bash
-# TODO remove absolute path
-xacro model.urdf.xacro gazebo_ros_four_wheel_steering_prefix:=$(ros2 pkg prefix gazebo_ros_four_wheel_steering) -o model.urdf
-gz sdf
+# 1. build project to generate the test model (gazebo_ros_four_wheel_steering_test_vehicle) on the install path
+# 2. run test world, loading this model
 gazebo --verbose test/worlds/gazebo_ros_four_wheel_steering.world
 ```
 
-The joint names in the following configuration example are the defaults, and they're required joints for the plugin to work. Wheel radius, wheelbase, track and steering offset are determined from joint distances and collision geometry.
+The joint names in the following configuration example are the defaults, and those joints are required for the plugin to work.
+Wheel radius, wheelbase, track and steering offset are determined from the joint distances and collision geometry in the model.
 
 ```xml
 <model>
@@ -52,14 +52,9 @@ The joint names in the following configuration example are the defaults, and the
 </model>
 ```
 
-## Open issues
-
-The front and rear steering axles currently have two independent left and right steering joints each.
-There should be a version of the controller that can interface with a central steering joint for each of the axles. With the independent joints it is tricky to tune the controller, as steering has to counteract the drive traction on the wheel forcing the steering joint to turn inwards.
-
 ## License and Copyright
 
-`controller.hpp` and `controller.cpp` are taken from the BSD-licensed [ros_controllers (https://github.com/ros-controls/ros_controllers)](https://github.com/ros-controls/ros_controllers), with a modified interface to the plugin.
+`controller.hpp` and `controller.cpp` are adapted from the BSD-licensed [ros_controllers (https://github.com/ros-controls/ros_controllers)](https://github.com/ros-controls/ros_controllers), with a modified interface to the plugin.
 The rest of the repository is Apache-2.0-licensed, with copyright holders determined in the file headers.
 Contributions to existing files should be made under the license of that file.
 
