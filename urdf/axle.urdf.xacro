@@ -60,12 +60,12 @@
           <limit>
             <lower>-0.61</lower>
             <upper>0.61</upper>
-            <effort>1000</effort>
+            <effort>8000</effort>
             <velocity>1.1914</velocity>
           </limit>
           <dynamics>
-            <damping>1</damping>
-            <friction>2</friction>
+            <damping>0</damping>
+            <friction>5</friction>
           </dynamics>
         </axis>
         <physics>
