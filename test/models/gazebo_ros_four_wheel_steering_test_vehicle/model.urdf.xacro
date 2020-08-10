@@ -2,30 +2,37 @@
 <robot
     name="gazebo_ros_four_wheel_steering_test_vehicle"
     xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(arg xacro_prefix)/urdf/four_wheel_steering.urdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/inertia_tensors.urdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.urdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/four_wheel_steering.urdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/inertia_tensors.urdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/primitives.urdf.xacro" />
   <xacro:include filename="wheel.urdf.xacro" />
 
   <xacro:property
-      name="wheel_track"
-      value="1.6" />
+      name="axle_width"
+      value="1.06" />
+
+  <xacro:property
+      name="axle_wheel_offset_y"
+      value="0.06" />
+
   <xacro:property
       name="wheel_base"
-      value="1.5" />
+      value="1.1" />
 
   <link name="chassis">
     <xacro:box_inertial_with_origin
         mass="100.0"
         x="2"
-        y="0.8"
+        y="0.6"
         z="0.6">
       <origin xyz="-0.05 0 -0.1" />
     </xacro:box_inertial_with_origin>
-    <xacro:box_primitive
+    <xacro:box_primitive_with_origin
         x="2"
-        y="0.8"
-        z="0.6" />
+        y="0.6"
+        z="0.6">
+      <origin xyz="0 0 0.4" />
+    </xacro:box_primitive_with_origin>
   </link>
 
   <xacro:property
@@ -42,19 +49,22 @@
   <xacro:four_wheel_steering
       front_parent="chassis"
       rear_parent="chassis"
-      front_origin_x="${wheel_track / 2}"
-      rear_origin_x="${-wheel_track / 2}"
-      axle_x="${wheel_track / 2}"
-      gear_x="0.48"
-      socket_x="-0.1"
-      socket_y="0.075"
+      front_origin_x="${wheel_base / 2}"
+      rear_origin_x="${-wheel_base / 2}"
+      axle_x="${wheel_base / 2}"
+      axle_width="${axle_width}"
+      gear_x="${wheel_base / 2 - 0.25}"
+      socket_x="${wheel_base / 2 - 0.25 + 0.08}"
+      socket_y="0.06"
+      rod_x="${wheel_base / 2 - 0.125}"
+      rod_y="${axle_width / 2}"
       z="0" />
 
   <xacro:wheel
       wheel_prefix="front_left"
       parent_link="front_left_axle">
     <origin
-        xyz="0 ${0.156911} 0"
+        xyz="0 ${axle_wheel_offset_y} 0"
         rpy="${pi/2} 0 0" />
   </xacro:wheel>
 
@@ -62,7 +72,7 @@
       wheel_prefix="front_right"
       parent_link="front_right_axle">
     <origin
-        xyz="0 ${-0.156911} 0"
+        xyz="0 ${-axle_wheel_offset_y} 0"
         rpy="${pi/2} 0 0" />
   </xacro:wheel>
 
@@ -70,7 +80,7 @@
       wheel_prefix="rear_left"
       parent_link="rear_left_axle">
     <origin
-        xyz="0 ${0.156911} 0"
+        xyz="0 ${axle_wheel_offset_y} 0"
         rpy="${pi/2} 0 0" />
   </xacro:wheel>
 
@@ -78,7 +88,7 @@
       wheel_prefix="rear_right"
       parent_link="rear_right_axle">
     <origin
-        xyz="0 ${-0.156911} 0"
+        xyz="0 ${-axle_wheel_offset_y} 0"
         rpy="${pi/2} 0 0" />
   </xacro:wheel>
 

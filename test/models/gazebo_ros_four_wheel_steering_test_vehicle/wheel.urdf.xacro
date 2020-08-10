@@ -9,7 +9,7 @@
       name="drive_max_radps"
       value="6.358" />
 
-  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.urdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/primitives.urdf.xacro" />
 
   <xacro:macro
       name="wheel"

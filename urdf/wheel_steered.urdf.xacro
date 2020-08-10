@@ -12,8 +12,8 @@
 
   <xacro:macro
       name="wheel_steered"
-      params="wheel_prefix parent_link left_right *origin">
-    <link name="${wheel_prefix}_axle">
+      params="prefix parent_link left_right *origin">
+    <link name="${prefix}_axle">
       <visual>
         <origin
             xyz="0 0 0"
@@ -38,7 +38,7 @@
     </link>
 
     <joint
-        name="${wheel_prefix}_kingpin"
+        name="${prefix}_kingpin"
         type="revolute">
       <limit
           lower="-0.6109"
@@ -47,7 +47,7 @@
           velocity="1.4" />
       <axis xyz="0 0 1" />
       <parent link="${parent_link}" />
-      <child link="${wheel_prefix}_axle" />
+      <child link="${prefix}_axle" />
       <xacro:insert_block name="origin" />
       <dynamics
           damping="1.0"

@@ -4,42 +4,41 @@
       name="gear_size"
       value="0.1" />
 
-  <xacro:include filename="$(arg xacro_prefix)/urdf/wheel_steered.urdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/steering_rod.sdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.sdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/inertia_tensors.sdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/wheel_steered.urdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/steering_rod.sdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/primitives.sdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/inertia_tensors.sdf.xacro" />
 
   <!--
   prefix: front, rear
   parent link: should be vehicle chassis
-  is_front: 1 for front, -1 for rear
-  gear_x: offset from axle x position to gear x position, typically negative
+  gear_x: x position of steering gear, assumed y = 0 as in the center of the vehicle
   socket_x: offset from gear to rod socket x position
   socket_y: offset from gear to rod socket y position
   -->
   <xacro:macro
       name="axle"
-      params="prefix parent is_front x gear_x socket_x socket_y z *origin">
+      params="prefix parent x width gear_x socket_x socket_y rod_x rod_y z *origin">
 
     <xacro:wheel_steered
-        wheel_prefix="${prefix}_left"
+        prefix="${prefix}_left"
         parent_link="${parent}"
         left_right="1">
-      <xacro:insert_block name="origin" />
+      <origin xyz="${x} ${width / 2} ${z}" />
     </xacro:wheel_steered>
 
     <xacro:wheel_steered
-        wheel_prefix="${prefix}_right"
+        prefix="${prefix}_right"
         parent_link="${parent}"
         left_right="-1">
-      <xacro:insert_block name="origin" />
+      <origin xyz="${x} ${-width / 2} ${z}" />
     </xacro:wheel_steered>
 
     <!-- SDF-only steering system -->
     <gazebo>
       <link name="${prefix}_steering_gear">
         <pose>
-          ${x + gear_x} 0 ${z} 0 0 0
+          ${gear_x} 0 ${z} 0 0 0
         </pose>
         <xacro:sdf_box_inertia
             x="${gear_size}"
@@ -60,10 +59,10 @@
         <axis>
           <xyz>0 0 1</xyz>
           <limit>
-            <lower>-1.5</lower>
-            <upper>1.5</upper>
-            <effort>2000</effort>
-            <velocity>1.24</velocity>
+            <lower>-0.515446875</lower>
+            <upper>0.515446875</upper>
+            <effort>1000</effort>
+            <velocity>1.1914</velocity>
           </limit>
           <dynamics>
             <damping>1</damping>
@@ -77,16 +76,20 @@
         </physics>
       </joint>
       <xacro:steering_rod
-          prefix="${prefix}_left"
-          gear_x="${is_front * (x + gear_x)}"
-          rod_x="${is_front * (x + gear_x + socket_x)}"
-          rod_y="${is_front * socket_y}"
+          front_prefix="${prefix}"
+          side_prefix="left"
+          socket_x="${socket_x}"
+          socket_y="${socket_y}"
+          rod_x="${rod_x}"
+          rod_y="${rod_y}"
           z="${z}" />
       <xacro:steering_rod
-          prefix="${prefix}_right"
-          gear_x="${is_front * (x + gear_x)}"
-          rod_x="${is_front * (x + gear_x + socket_x)}"
-          rod_y="${is_front * -socket_y}"
+          front_prefix="${prefix}"
+          side_prefix="right"
+          socket_x="${socket_x}"
+          socket_y="${-socket_y}"
+          rod_x="${rod_x}"
+          rod_y="${-rod_y}"
           z="${z}" />
     </gazebo>
 

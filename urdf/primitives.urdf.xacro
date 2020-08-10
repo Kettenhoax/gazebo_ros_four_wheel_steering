@@ -12,6 +12,20 @@
       </geometry>
     </collision>
   </xacro:macro>
+  <xacro:macro name="box_primitive_with_origin" params="x y z *origin">
+    <visual>
+      <xacro:insert_block name="origin" />
+      <geometry>
+        <box size="${x} ${y} ${z}" />
+      </geometry>
+    </visual>
+    <collision>
+      <xacro:insert_block name="origin" />
+      <geometry>
+          <box size="${x} ${y} ${z}" />
+      </geometry>
+    </collision>
+  </xacro:macro>
   <xacro:macro name="cylinder_primitive" params="length radius">
     <visual>
       <geometry>

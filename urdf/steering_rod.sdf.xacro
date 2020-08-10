@@ -1,43 +1,43 @@
 <?xml version="1.0"?>
 <sdf xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(arg xacro_prefix)/urdf/primitives.sdf.xacro" />
-  <xacro:include filename="$(arg xacro_prefix)/urdf/inertia_tensors.sdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/primitives.sdf.xacro" />
+  <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/inertia_tensors.sdf.xacro" />
 
   <xacro:property name="gear_connector_radius" value="0.05" />
   <xacro:property name="neglectable_mass" value="1" />
 
-  <xacro:macro name="steering_rod" params="prefix gear_x rod_x rod_y z">
-    <link name="${prefix}_steering_gear">
-      <pose>${gear_x} 0 ${z} 0 0 0</pose>
+  <xacro:macro name="steering_rod" params="front_prefix side_prefix socket_x socket_y rod_x rod_y z">
+    <link name="${front_prefix}_${side_prefix}_steering_gear">
+      <pose>${socket_x} ${socket_y} ${z} 0 0 0</pose>
       <xacro:sdf_sphere_inertia radius="${gear_connector_radius}" mass="${neglectable_mass}" />
       <xacro:sdf_sphere_primitive name="${prefix}" radius="${gear_connector_radius}" />
     </link>
 
-    <link name="${prefix}_axle_rod_connector">
+    <link name="${front_prefix}_${side_prefix}_axle_rod_connector">
       <pose>${rod_x} ${rod_y} ${z} 0 0 0</pose>
       <xacro:sdf_sphere_inertia radius="${gear_connector_radius}" mass="${neglectable_mass}" />
       <xacro:sdf_sphere_primitive name="${prefix}" radius="${gear_connector_radius}" />
     </link>
 
-    <joint name="${prefix}_steering_connector" type="revolute">
-      <parent>${prefix}_steering_gear</parent>
-      <child>${prefix}_steering_gear</child>
+    <joint name="${front_prefix}_${side_prefix}_steering_connector" type="revolute">
+      <parent>${front_prefix}_steering_gear</parent>
+      <child>${front_prefix}_${side_prefix}_steering_gear</child>
       <axis>
         <xyz>0 0 1</xyz>
       </axis>
     </joint>
 
-    <joint name="${prefix}_steering_rod" type="revolute">
-      <parent>${prefix}_steering_gear</parent>
-      <child>${prefix}_axle_rod_connector</child>
+    <joint name="${front_prefix}_${side_prefix}_steering_rod" type="revolute">
+      <parent>${front_prefix}_${side_prefix}_steering_gear</parent>
+      <child>${front_prefix}_${side_prefix}_axle_rod_connector</child>
       <axis>
         <xyz>0 0 1</xyz>
       </axis>
     </joint>
 
-    <joint name="${prefix}_axle_connection" type="fixed">
-      <parent>${prefix}_axle_rod_connector</parent>
-      <child>${prefix}_axle</child>
+    <joint name="${front_prefix}_${side_prefix}_axle_connection" type="fixed">
+      <parent>${front_prefix}_${side_prefix}_axle_rod_connector</parent>
+      <child>${front_prefix}_${side_prefix}_axle</child>
     </joint>
   </xacro:macro>
 </sdf>

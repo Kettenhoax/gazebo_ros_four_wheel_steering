@@ -324,12 +324,9 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
     }
   }
 
-  double steering_k = -0.84375;
   for (auto steer_i : {FRONT_STEERING, REAR_STEERING}) {
     auto current_angle = joints_[steer_i]->Position(0);
-    // convert wheel angle to angle on steering motor
-    double steering_motor_cmd = cmds[steer_i] * steering_k;
-    auto angle_error = current_angle - steering_motor_cmd;
+    auto angle_error = current_angle - cmds[steer_i];
     errors[steer_i] = angle_error;
     auto steering_cmd = joint_pids_[steer_i].Update(angle_error, seconds_since_last_update);
     joints_[steer_i]->SetForce(0, steering_cmd);

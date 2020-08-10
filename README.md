@@ -17,7 +17,7 @@ To run the test world with Gazebo:
 
 ```bash
 # TODO remove absolute path
-xacro model.urdf.xacro xacro_prefix:=/home/zeilingerm/code/ws/sim/src/gazebo_ros_four_wheel_steering -o model.urdf
+xacro model.urdf.xacro gazebo_ros_four_wheel_steering_prefix:=$(ros2 pkg prefix gazebo_ros_four_wheel_steering) -o model.urdf
 gz sdf
 gazebo --verbose test/worlds/gazebo_ros_four_wheel_steering.world
 ```

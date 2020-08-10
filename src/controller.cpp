@@ -60,12 +60,17 @@ void compute_wheel_targets(
   double rear_right_angle = 0.0;
 
   if (fabs(vehicle.wheel_base - fabs(steering_diff)) > 0.001) {
+    // compute optimal angles resulting from ackermann steering, to determine optimal torque on motors
     front_left_angle = atan(wb * tan_front_steering / (wb - steering_diff));
     front_right_angle = atan(wb * tan_front_steering / (wb + steering_diff));
     rear_left_angle = atan(wb * tan_rear_steering / (wb - steering_diff));
     rear_right_angle = atan(wb * tan_rear_steering / (wb + steering_diff));
-    cmds[FRONT_STEERING] = -cmd_4ws.front_steering_angle;
-    cmds[REAR_STEERING] = -cmd_4ws.rear_steering_angle;
+
+    // convert from wheel angle to steering gear angle
+    // TODO compute from steering links and joint positions
+    double steering_gear_k = -0.84375;
+    cmds[FRONT_STEERING] = steering_gear_k * cmd_4ws.front_steering_angle;
+    cmds[REAR_STEERING] = steering_gear_k * cmd_4ws.rear_steering_angle;
   }
 
   // Compute wheels velocities

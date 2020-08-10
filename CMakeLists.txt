@@ -74,7 +74,7 @@ set(INSTALL_MODEL_DIR share/${PROJECT_NAME}/models/gazebo_ros_four_wheel_steerin
 install(FILES ${TEST_MODEL_DIR}/model.config DESTINATION ${INSTALL_MODEL_DIR})
 
 xacro_add_files(test/models/gazebo_ros_four_wheel_steering_test_vehicle/model.urdf.xacro
-  REMAP xacro_prefix:=${CMAKE_SOURCE_DIR}
+  REMAP gazebo_ros_four_wheel_steering_prefix:=${CMAKE_SOURCE_DIR}
   TARGET model.urdf
   INSTALL DESTINATION models/gazebo_ros_four_wheel_steering_test_vehicle)
 
