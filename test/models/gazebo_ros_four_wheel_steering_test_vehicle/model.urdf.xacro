@@ -47,22 +47,21 @@
       value="30.0" />
 
   <xacro:property
-    name="steering_gear_triangle_length"
-    value="0.1" />
+      name="steering_gear_triangle_length"
+      value="0.1" />
   <xacro:property
-    name="socket_x"
-    value="${steering_gear_triangle_length * sin(60 / 180 * pi)}" />
+      name="socket_x"
+      value="${steering_gear_triangle_length * sin(60 / 180 * pi)}" />
   <xacro:property
-    name="socket_y"
-    value="${steering_gear_triangle_length * cos(60 / 180 * pi)}" />
+      name="socket_y"
+      value="${steering_gear_triangle_length * cos(60 / 180 * pi)}" />
 
   <xacro:property
-    name="gear_x"
-    value="${wheel_base / 2 - 0.25}" />
+      name="gear_x"
+      value="${wheel_base / 2 - 0.25}" />
 
   <xacro:four_wheel_steering
-      front_parent="chassis"
-      rear_parent="chassis"
+      parent="chassis"
       front_origin_x="${wheel_base / 2}"
       rear_origin_x="${-wheel_base / 2}"
       axle_width="${axle_width}"
@@ -110,6 +109,7 @@
     <plugin
         name="gazebo_ros_4ws"
         filename="libgazebo_ros_four_wheel_steering.so">
+      <steering_gear_transmission_ratio>1.6</steering_gear_transmission_ratio>
       <front_right_motor_pid_gain>400 10 1</front_right_motor_pid_gain>
       <front_left_motor_pid_gain>400 10 1</front_left_motor_pid_gain>
       <rear_right_motor_pid_gain>400 10 1</rear_right_motor_pid_gain>

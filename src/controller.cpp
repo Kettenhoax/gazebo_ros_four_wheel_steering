@@ -67,10 +67,8 @@ void compute_wheel_targets(
     rear_right_angle = atan(wb * tan_rear_steering / (wb + steering_diff));
 
     // convert from wheel angle to steering gear angle
-    // TODO compute from geometry
-    double steering_angle_k = -1.671232877;
-    cmds[FRONT_STEERING] = steering_angle_k * cmd_4ws.front_steering_angle;
-    cmds[REAR_STEERING] = steering_angle_k * cmd_4ws.rear_steering_angle;
+    cmds[FRONT_STEERING] = -vehicle.steering_gear_transmission_ratio * cmd_4ws.front_steering_angle;
+    cmds[REAR_STEERING] = -vehicle.steering_gear_transmission_ratio * cmd_4ws.rear_steering_angle;
   }
 
   // Compute wheels velocities

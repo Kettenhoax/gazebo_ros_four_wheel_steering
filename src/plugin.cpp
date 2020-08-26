@@ -149,6 +149,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   auto world = impl_->model_->GetWorld();
   auto physicsEngine = world->Physics();
+  // TODO(ZeilingerM) evaluate if its necessary to force the model, instead of suggesting for world in README
   physicsEngine->SetParam("friction_model", std::string("cone_model"));
 
   // Initialize ROS node
@@ -237,6 +238,16 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     impl_->ros_node_.reset();
     return;
   }
+
+  auto steering_gear_transmission_ratio_param = _sdf->Get("steering_gear_transmission_ratio", 0.0);
+  if (!steering_gear_transmission_ratio_param.second) {
+    RCLCPP_ERROR(
+      impl_->ros_node_->get_logger(),
+      "steering_gear_transmission_ratio parameter required, FourWheelSteering cannot be initialized.");
+    impl_->ros_node_.reset();
+    return;
+  }
+  impl_->vehicle_.steering_gear_transmission_ratio = steering_gear_transmission_ratio_param.first;
 
   // Compute wheel_base, front wheel separation, and rear wheel separation
   // first compute the positions of the 4 wheel centers

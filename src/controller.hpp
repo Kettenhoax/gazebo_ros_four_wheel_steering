@@ -52,6 +52,9 @@ struct FourWheelSteeringVehicle
 
   /// Distance between any wheel and its steering joint
   double distance_steering_to_wheel;
+
+  /// Transmission ratio of steering gear to wheel steering angle
+  double steering_gear_transmission_ratio;
 };
 
 void compute_wheel_targets(

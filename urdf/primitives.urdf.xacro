@@ -38,4 +38,16 @@
       </geometry>
     </collision>
   </xacro:macro>
+  <xacro:macro name="sphere_primitive" params="radius">
+    <visual>
+      <geometry>
+        <sphere radius="${radius}" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${radius}" />
+      </geometry>
+    </collision>
+  </xacro:macro>
 </robot>

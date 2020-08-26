@@ -4,10 +4,10 @@
     name="wheel">
   <xacro:property
       name="drive_max_nm"
-      value="755" />
+      value="1000.0" />
   <xacro:property
       name="drive_max_radps"
-      value="6.358" />
+      value="6.0" />
 
   <xacro:include filename="$(arg gazebo_ros_four_wheel_steering_prefix)/urdf/primitives.urdf.xacro" />
 
