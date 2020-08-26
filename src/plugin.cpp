@@ -32,7 +32,9 @@
 #include <control_msgs/msg/pid_state.hpp>
 
 #include "gazebo_ros_four_wheel_steering/plugin.hpp"
+#include "vehicle.hpp"
 #include "controller.hpp"
+#include "odometry.hpp"
 
 namespace gazebo_plugins
 {
@@ -56,7 +58,7 @@ public:
   /// \param[in] _coll Pointer to collision
   /// \return If the collision shape is valid, return radius
   /// \return If the collision shape is invalid, return 0
-  double CollisionRadius(const gazebo::physics::CollisionPtr & _coll);
+  bool CollisionRadius(const gazebo::physics::CollisionPtr & _coll, double * radius);
 
   /// Infers the wheel radius from the links attached to the wheel joints
   /// \param[out] _radius Output radius in meters
@@ -65,13 +67,18 @@ public:
 
   /// Update joint controller targets
   /// \param[in] dt Delta time in seconds
-  void UpdateTargets(double);
+  void UpdateControllers(double);
 
   /// A pointer to the GazeboROS node.
   gazebo_ros::Node::SharedPtr ros_node_;
 
   /// Subscriber to command velocities
   rclcpp::Subscription<FourWheelSteeringStamped>::SharedPtr cmd_sub_;
+
+  /// Publisher of drive odometry
+  rclcpp::Publisher<FourWheelSteeringStamped>::SharedPtr odom_pub_;
+
+  std::unique_ptr<FourWheelSteeringOdometry> odometry_;
 
   /// Connection to event called at every world iteration.
   gazebo::event::ConnectionPtr update_connection_;
@@ -337,8 +344,11 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   impl_->cmd_sub_ =
     impl_->ros_node_->create_subscription<FourWheelSteeringStamped>(
-    "cmd_4ws", rclcpp::QoS(rclcpp::KeepLast(1)),
+    "cmd_4ws", rclcpp::QoS(1),
     std::bind(&GazeboRosFourWheelSteeringPrivate::OnCmd, impl_.get(), std::placeholders::_1));
+
+  impl_->odometry_ = std::make_unique<FourWheelSteeringOdometry>(impl_->vehicle_);
+  impl_->odom_pub_ = impl_->ros_node_->create_publisher<FourWheelSteeringStamped>("odom_4ws", 1);
 
   RCLCPP_INFO(
     impl_->ros_node_->get_logger(),
@@ -350,9 +360,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
       auto pub =
         impl_->ros_node_->create_publisher<control_msgs::msg::PidState>(
         "pid/" + name,
-        rclcpp::QoS(
-          rclcpp::KeepLast(
-            1)));
+        rclcpp::QoS(1));
       impl_->pid_publishers_.push_back(pub);
     }
   }
@@ -377,15 +385,19 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
   double seconds_since_last_update = (_info.simTime - last_update_time_).Double();
 
   if (seconds_since_last_update >= update_period_) {
-    UpdateTargets(seconds_since_last_update);
+    UpdateControllers(seconds_since_last_update);
     last_update_time_ = _info.simTime;
     for (auto & controller : joint_controllers_) {
       controller->Update();
     }
+    auto msg = odometry_->compute(model_, joints_);
+    msg->header.frame_id = state_frame_id_;
+    msg->header.stamp = ros_node_->now();
+    odom_pub_->publish(std::move(msg));
   }
 }
 
-void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
+void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
 {
   auto ros_time = ros_node_->now();
 
@@ -470,42 +482,47 @@ void GazeboRosFourWheelSteeringPrivate::UpdateTargets(double dt)
 
 void GazeboRosFourWheelSteeringPrivate::OnCmd(FourWheelSteeringStamped::SharedPtr msg)
 {
-  std::lock_guard<std::mutex> scoped_lock(lock_);
+  std::lock_guard<std::mutex> lock(lock_);
   commands_.push_back(*msg);
 }
 
-double GazeboRosFourWheelSteeringPrivate::CollisionRadius(
-  const gazebo::physics::CollisionPtr & _coll)
+bool GazeboRosFourWheelSteeringPrivate::CollisionRadius(
+  const gazebo::physics::CollisionPtr & _coll, double * radius)
 {
   if (!_coll || !(_coll->GetShape())) {
-    return 0;
+    return false;
   }
   if (_coll->GetShape()->HasType(gazebo::physics::Base::CYLINDER_SHAPE)) {
     gazebo::physics::CylinderShape * cyl =
       dynamic_cast<gazebo::physics::CylinderShape *>(_coll->GetShape().get());
-    return cyl->GetRadius();
+    *radius = cyl->GetRadius();
+    return true;
   } else if (_coll->GetShape()->HasType(gazebo::physics::Base::SPHERE_SHAPE)) {
     gazebo::physics::SphereShape * sph =
       dynamic_cast<gazebo::physics::SphereShape *>(_coll->GetShape().get());
-    return sph->GetRadius();
+    *radius = sph->GetRadius();
+    return true;
   }
-  return 0;
+  return false;
 }
 
-bool GazeboRosFourWheelSteeringPrivate::InferWheelRadius(double * radius)
+bool GazeboRosFourWheelSteeringPrivate::InferWheelRadius(
+  double * radius)
 {
   // Update wheel radius for wheel from SDF collision objects
   // assumes that wheel link is child of joint (and not parent of joint)
   // assumes that wheel link has only one collision
   // assumes all wheel of both rear wheels of same radii
-  unsigned int id = 0;
   double radii[4];
 
   for (size_t i = 0; i < 4; i++) {
-    const auto & joint = joints_[FRONT_RIGHT_MOTOR + i];
-    const auto & collision_object = joint->GetChild()->GetCollision(id);
-    auto radius = CollisionRadius(collision_object);
-    if (radius < 0.01) {
+    const auto wheel = joints_[FRONT_RIGHT_MOTOR + i]->GetChild();
+    if (wheel->GetCollisions().size() != 1) {
+      return false;
+    }
+    const auto collision_object = wheel->GetCollisions().at(0);
+    double radius;
+    if (!CollisionRadius(collision_object, &radius)) {
       return false;
     }
     radii[i] = radius;

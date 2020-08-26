@@ -21,7 +21,10 @@ find_package(four_wheel_steering_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(xacro REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED src/plugin.cpp src/controller.cpp)
+add_library(${PROJECT_NAME} SHARED
+  src/plugin.cpp
+  src/odometry.cpp
+  src/controller.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 target_include_directories(${PROJECT_NAME} PRIVATE ./src)
 ament_target_dependencies(${PROJECT_NAME}

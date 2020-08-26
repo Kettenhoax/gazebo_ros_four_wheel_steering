@@ -57,9 +57,13 @@ The following parameters can be passed as children on the sdf plugin element.
 
 Parameters on the geometry of the vehicle are derived from the links and joints on the model.
 
-Gazebo subscribes to the following topics.
+### Subscriptions
 
 * `cmd_4ws`: drive commands of type `four_wheel_steering_msgs/msg/FourWheelSteeringStamped`
+
+### Publishers
+
+* `odom_4ws`: drive odometry of type `four_wheel_steering_msgs/msg/FourWheelSteeringStamped`
 * `pid/{joint_name}`: PID state of type `control_msgs/msg/PidState`
 
 ### Example
