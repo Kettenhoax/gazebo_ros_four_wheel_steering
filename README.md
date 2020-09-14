@@ -34,6 +34,10 @@ To make sure the command timeout and latency simulation work correctly with ROS:
 The joint names in the following configuration example are the defaults, and those joints are required for the plugin to work.
 Wheel radius, wheelbase, track and steering offset are determined from the joint distances and collision geometry in the model.
 
+### Tests
+
+When running tests using `colcon test`, make sure the install folder is sourced, as the test will timeout searching the wrong MODEL_PATH otherwise.
+
 ## Model
 
 The model uses a joint with multiple parents for each wheel kingpin.

@@ -16,14 +16,14 @@
 
 #include <gazebo/common/Time.hh>
 #include <gazebo/test/ServerFixture.hh>
-#include <four_wheel_steering_msgs/msg/four_wheel_steering.hpp>
+#include <four_wheel_steering_msgs/msg/four_wheel_steering_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 // floating-point tolerance for test comparisons
 #define tol 10e-1
 
 using namespace std::literals::chrono_literals; // NOLINT
-using four_wheel_steering_msgs::msg::FourWheelSteering;
+using four_wheel_steering_msgs::msg::FourWheelSteeringStamped;
 
 class GazeboRosFourWheelSteeringTest : public gazebo::ServerFixture
 {
@@ -36,16 +36,18 @@ TEST_F(GazeboRosFourWheelSteeringTest, DriveStraight)
   auto world = gazebo::physics::get_world();
   ASSERT_NE(nullptr, world);
 
-  auto vehicle = world->ModelByName("vehicle");
+  auto vehicle = world->ModelByName("gazebo_ros_four_wheel_steering_test_vehicle");
   ASSERT_NE(nullptr, vehicle);
 
-  auto node = std::make_shared<rclcpp::Node>("gazebo_ros_four_wheel_steering_test");
+  rclcpp::NodeOptions options;
+  options.append_parameter_override("use_sim_time", true);
+  auto node = std::make_shared<rclcpp::Node>("gazebo_ros_four_wheel_steering_test", options);
   ASSERT_NE(nullptr, node);
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);
 
-  auto pub = node->create_publisher<FourWheelSteering>("cmd_4ws", rclcpp::QoS(1));
+  auto pub = node->create_publisher<FourWheelSteeringStamped>("cmd_4ws", rclcpp::QoS(1));
 
   // Step a bit for model to settle
   world->Step(100);
@@ -58,15 +60,17 @@ TEST_F(GazeboRosFourWheelSteeringTest, DriveStraight)
   EXPECT_NEAR(0.0, vehicle->WorldLinearVel().X(), tol);
   EXPECT_NEAR(0.0, vehicle->WorldAngularVel().Z(), tol);
 
-  auto msg = FourWheelSteering();
-  msg.speed = 1.0;
-  msg.front_steering_angle = 0.0;
-  msg.rear_steering_angle = 0.0;
-  pub->publish(msg);
+  auto msg = FourWheelSteeringStamped();
+  msg.header.frame_id = "base_link";
+  msg.data.speed = 1.0;
+  msg.data.front_steering_angle = 0.0;
+  msg.data.rear_steering_angle = 0.0;
 
   // Process simulation in 10ms-increments for 1 second
   size_t steps{100};
   for (size_t step = 0; step < steps; ++step) {
+    msg.header.stamp = node->get_clock()->now();
+    pub->publish(msg);
     world->Step(10);
     executor.spin_once(10ms);
   }
