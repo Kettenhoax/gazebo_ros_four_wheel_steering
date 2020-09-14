@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gazebo_ros/conversions/builtin_interfaces.hpp>
+#include <gazebo_ros/conversions/geometry_msgs.hpp>
+#include <gazebo_ros/node.hpp>
+#include <four_wheel_steering_msgs/msg/four_wheel_steering_stamped.hpp>
+#include <control_msgs/msg/pid_state.hpp>
+
 #include <gazebo/common/Time.hh>
 #include <gazebo/common/PID.hh>
 #include <gazebo/physics/Joint.hh>
@@ -21,15 +27,13 @@
 #include <gazebo/physics/physics.hh>
 #include <sdf/sdf.hh>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <gazebo_ros/conversions/builtin_interfaces.hpp>
-#include <gazebo_ros/conversions/geometry_msgs.hpp>
-#include <gazebo_ros/node.hpp>
-#include <four_wheel_steering_msgs/msg/four_wheel_steering_stamped.hpp>
-#include <control_msgs/msg/pid_state.hpp>
+#include <deque>
+#include <utility>
+#include <limits>
 
 #include "gazebo_ros_four_wheel_steering/plugin.hpp"
 #include "vehicle.hpp"
@@ -286,7 +290,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     "Distance between wheel and steering joint: %.2f", impl_->vehicle_.distance_steering_to_wheel);
 
   auto rod = _model->GetJoint("front_right_steering_rod");
-  // TODO validate existing joint
+  // TODO(ZeilingerM) validate existing joint
   auto rod_length =
     rod->GetParent()->WorldPose().Pos().Distance(rod->GetChild()->WorldPose().Pos());
   RCLCPP_INFO(
@@ -294,7 +298,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     "Length of steering rod: %.2f", rod_length);
 
   auto socket = _model->GetJoint("front_right_steering_connector");
-  // TODO validate existing joint
+  // TODO(ZeilingerM) validate existing joint
   auto socket_distance = socket->GetParent()->WorldPose().Pos().Distance(
     socket->GetChild()->WorldPose().Pos());
   RCLCPP_INFO(

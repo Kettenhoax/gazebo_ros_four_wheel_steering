@@ -64,7 +64,7 @@ if(BUILD_TESTING)
 endif()
 
 install(TARGETS ${PROJECT_NAME}
-   DESTINATION lib
+  DESTINATION lib
 )
 
 install(DIRECTORY urdf

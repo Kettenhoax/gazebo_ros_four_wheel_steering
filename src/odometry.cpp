@@ -1,6 +1,8 @@
-#include "odometry.hpp"
-#include "gazebo_ros_four_wheel_steering/plugin.hpp"
 #include <gazebo/physics/Joint.hh>
+#include <vector>
+#include <memory>
+#include "gazebo_ros_four_wheel_steering/plugin.hpp"
+#include "odometry.hpp"
 
 namespace gazebo_plugins
 {
@@ -51,4 +53,4 @@ FourWheelSteeringStamped::UniquePtr FourWheelSteeringOdometry::compute(
   return odom;
 }
 
-} // namespace gazebo_plugins
+}  // namespace gazebo_plugins

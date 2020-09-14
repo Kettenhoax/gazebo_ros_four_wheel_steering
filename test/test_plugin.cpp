@@ -45,7 +45,7 @@ TEST_F(GazeboRosFourWheelSteeringTest, DriveStraight)
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);
 
-  auto pub = node->create_publisher<FourWheelSteering>("test/cmd_4ws", rclcpp::QoS(rclcpp::KeepLast(1)));
+  auto pub = node->create_publisher<FourWheelSteering>("cmd_4ws", rclcpp::QoS(1));
 
   // Step a bit for model to settle
   world->Step(100);
@@ -64,8 +64,8 @@ TEST_F(GazeboRosFourWheelSteeringTest, DriveStraight)
   msg.rear_steering_angle = 0.0;
   pub->publish(msg);
 
-  // Process simulation in 10ms-increments for 2 seconds
-  size_t steps{200};
+  // Process simulation in 10ms-increments for 1 second
+  size_t steps{100};
   for (size_t step = 0; step < steps; ++step) {
     world->Step(10);
     executor.spin_once(10ms);
