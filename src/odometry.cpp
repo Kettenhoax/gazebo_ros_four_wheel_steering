@@ -1,3 +1,17 @@
+// Copyright 2020 AIT Austrian Institute of Technology GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <gazebo/physics/Joint.hh>
 #include <vector>
 #include <memory>
@@ -34,22 +48,13 @@ FourWheelSteeringStamped::UniquePtr FourWheelSteeringOdometry::compute(
   odom->data.front_steering_angle = front_angle;
   odom->data.rear_steering_angle = rear_angle;
 
-  double denom = (tan(front_angle) - tan(rear_angle)) / vehicle_.wheel_base;
-  double ft = cos(front_angle) / denom;
-  double rt = cos(rear_angle) / denom;
-
   auto rads_fl = joints[FRONT_LEFT_MOTOR]->GetVelocity(0);
   auto rads_fr = joints[FRONT_RIGHT_MOTOR]->GetVelocity(0);
   auto rads_rl = joints[REAR_LEFT_MOTOR]->GetVelocity(0);
   auto rads_rr = joints[REAR_RIGHT_MOTOR]->GetVelocity(0);
+  auto rads_avg = (rads_fl + rads_fr + rads_rl + rads_rr) / 4.0;
 
-  double steering_track = vehicle_.wheel_track - 2 * vehicle_.distance_steering_to_wheel;
-  auto v_front =
-    sqrt((rads_fl * rads_fl + rads_fr * rads_fr) / (2 + std::pow(steering_track * ft / 2, 2)));
-  auto v_rear =
-    sqrt((rads_rl * rads_rl + rads_rr * rads_rr) / (2 + std::pow(steering_track * rt / 2, 2)));
-
-  odom->data.speed = vehicle_.wheel_radius * (v_front + v_rear) / 2;
+  odom->data.speed = vehicle_.wheel_radius * rads_avg;
   return odom;
 }
 
