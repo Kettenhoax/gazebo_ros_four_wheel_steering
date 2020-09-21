@@ -25,6 +25,7 @@
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/sensors/Noise.hh>
 #include <sdf/sdf.hh>
 
 #include <map>
@@ -98,7 +99,14 @@ public:
   /// Command in order of reception
   std::deque<FourWheelSteeringStamped> commands_;
 
+  /// Last received drive command
   FourWheelSteeringStamped last_cmd_;
+
+  /// Noise applied to speed odometry
+  gazebo::sensors::NoisePtr speed_sensing_noise_;
+
+  /// Noise applied to front and rear steering angle odometry
+  gazebo::sensors::NoisePtr steering_angle_sensing_noise_;
 
   /// Update period in seconds.
   double update_period_;
@@ -152,6 +160,32 @@ static double GetVelocityJointDefaultGain(gazebo::physics::JointPtr joint)
 static double GetPositionJointDefaultGain(gazebo::physics::JointPtr joint)
 {
   return joint->UpperLimit(0) * joint->GetEffortLimit(0);
+}
+
+static gazebo::sensors::NoisePtr GetSpeedNoiseModel(sdf::ElementPtr _root)
+{
+  auto speed_sensing = _root->GetElement("speed_sensing");
+  if (nullptr == speed_sensing) {
+    return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
+  }
+  auto speed_noise_element = speed_sensing->GetElement("noise");
+  if (nullptr == speed_noise_element) {
+    return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
+  }
+  return gazebo::sensors::NoiseFactory::NewNoiseModel(speed_noise_element);
+}
+
+static gazebo::sensors::NoisePtr GetSteeringAngleNoiseModel(sdf::ElementPtr _root)
+{
+  auto steering_angle_sensing = _root->GetElement("steering_angle_sensing");
+  if (nullptr == steering_angle_sensing) {
+    return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
+  }
+  auto steering_angle_noise_element = steering_angle_sensing->GetElement("noise");
+  if (nullptr == steering_angle_noise_element) {
+    return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
+  }
+  return gazebo::sensors::NoiseFactory::NewNoiseModel(steering_angle_noise_element);
 }
 
 void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -344,6 +378,20 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   impl_->command_timeout_ = _sdf->Get<double>("command_timeout", impl_->update_period_ * 2).first;
   impl_->latency_ = _sdf->Get<double>("latency", 0.0).first;
+
+  impl_->speed_sensing_noise_ = GetSpeedNoiseModel(_sdf);
+  if (impl_->speed_sensing_noise_->GetNoiseType() != gazebo::sensors::Noise::NONE) {
+    RCLCPP_INFO(
+      impl_->ros_node_->get_logger(),
+      "Applying noise model to speed sensing");
+  }
+  impl_->steering_angle_sensing_noise_ = GetSteeringAngleNoiseModel(_sdf);
+  if (impl_->steering_angle_sensing_noise_->GetNoiseType() != gazebo::sensors::Noise::NONE) {
+    RCLCPP_INFO(
+      impl_->ros_node_->get_logger(),
+      "Applying noise model to steering angle sensing");
+  }
+
   impl_->last_update_time_ = _model->GetWorld()->SimTime();
 
   impl_->cmd_sub_ =
@@ -397,6 +445,11 @@ void GazeboRosFourWheelSteeringPrivate::OnUpdate(const gazebo::common::UpdateInf
     auto msg = odometry_->compute(model_, joints_);
     msg->header.frame_id = state_frame_id_;
     msg->header.stamp = ros_node_->now();
+    msg->data.speed = speed_sensing_noise_->Apply(msg->data.speed);
+    msg->data.front_steering_angle = steering_angle_sensing_noise_->Apply(
+      msg->data.front_steering_angle);
+    msg->data.rear_steering_angle = steering_angle_sensing_noise_->Apply(
+      msg->data.rear_steering_angle);
     odom_pub_->publish(std::move(msg));
   }
 }
