@@ -194,8 +194,6 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   auto world = impl_->model_->GetWorld();
   auto physicsEngine = world->Physics();
-  // TODO(ZeilingerM) evaluate if its necessary to force the model, instead of suggesting for world in README
-  physicsEngine->SetParam("friction_model", std::string("cone_model"));
 
   // Initialize ROS node
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
@@ -324,7 +322,20 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     "Distance between wheel and steering joint: %.2f", impl_->vehicle_.distance_steering_to_wheel);
 
   auto rod = _model->GetJoint("front_right_steering_rod");
-  // TODO(ZeilingerM) validate existing joint
+  if (nullptr == rod) {
+    RCLCPP_ERROR(
+      impl_->ros_node_->get_logger(),
+      "Joint [front_right_steering_rod] not found, FourWheelSteering cannot be initialized.");
+    impl_->ros_node_.reset();
+    return;
+  }
+  if (rod->GetType() == gazebo::physics::Joint::HINGE_JOINT) {
+    RCLCPP_ERROR(
+      impl_->ros_node_->get_logger(),
+      "Joint [front_right_steering_rod] is not revolute, FourWheelSteering cannot be initialized.");
+    impl_->ros_node_.reset();
+    return;
+  }
   auto rod_length =
     rod->GetParent()->WorldPose().Pos().Distance(rod->GetChild()->WorldPose().Pos());
   RCLCPP_INFO(
@@ -332,7 +343,13 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
     "Length of steering rod: %.2f", rod_length);
 
   auto socket = _model->GetJoint("front_right_steering_connector");
-  // TODO(ZeilingerM) validate existing joint
+  if (nullptr == socket) {
+    RCLCPP_ERROR(
+      impl_->ros_node_->get_logger(),
+      "Joint [front_right_steering_connector] not found, FourWheelSteering cannot be initialized.");
+    impl_->ros_node_.reset();
+    return;
+  }
   auto socket_distance = socket->GetParent()->WorldPose().Pos().Distance(
     socket->GetChild()->WorldPose().Pos());
   RCLCPP_INFO(
@@ -394,17 +411,22 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
 
   impl_->last_update_time_ = _model->GetWorld()->SimTime();
 
+  impl_->last_cmd_ = FourWheelSteeringStamped();
   impl_->cmd_sub_ =
     impl_->ros_node_->create_subscription<FourWheelSteeringStamped>(
     "cmd_4ws", rclcpp::QoS(1),
     std::bind(&GazeboRosFourWheelSteeringPrivate::OnCmd, impl_.get(), std::placeholders::_1));
+
+  RCLCPP_INFO(
+    impl_->ros_node_->get_logger(),
+    "Subscribed to [%s]", impl_->cmd_sub_->get_topic_name());
 
   impl_->odometry_ = std::make_unique<FourWheelSteeringOdometry>(impl_->vehicle_);
   impl_->odom_pub_ = impl_->ros_node_->create_publisher<FourWheelSteeringStamped>("odom_4ws", 1);
 
   RCLCPP_INFO(
     impl_->ros_node_->get_logger(),
-    "Subscribed to [%s]", impl_->cmd_sub_->get_topic_name());
+    "Publishing [%s]", impl_->odom_pub_->get_topic_name());
 
   if (_sdf->Get("publish_pid", true).first) {
     for (const auto & joint_name : joint_names) {
@@ -413,6 +435,10 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
         impl_->ros_node_->create_publisher<control_msgs::msg::PidState>(
         "pid/" + name,
         rclcpp::QoS(1));
+
+      RCLCPP_INFO(
+        impl_->ros_node_->get_logger(),
+        "Publishing [%s]", pub->get_topic_name());
       impl_->pid_publishers_.push_back(pub);
     }
   }
@@ -472,10 +498,6 @@ void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
   compute_wheel_targets(last_cmd_.data, vehicle_, cmds);
 
   for (auto wheel_i : {FRONT_RIGHT_MOTOR, FRONT_LEFT_MOTOR, REAR_RIGHT_MOTOR, REAR_LEFT_MOTOR}) {
-    // get wheel speed in rad/s
-    auto joint_velocity = joints_[wheel_i]->GetVelocity(0);
-    errors[wheel_i] = joint_velocity - cmds[wheel_i];
-
     // set wheel speed efforts
     if (ignition::math::v4::isnan(cmds[wheel_i])) {
       RCLCPP_WARN(
@@ -483,6 +505,9 @@ void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
         "NaN command for joint [%s]", joints_[wheel_i]->GetName().c_str());
       cmds[wheel_i] = 0.0;
     }
+    // get wheel speed in rad/s
+    auto joint_velocity = joints_[wheel_i]->GetVelocity(0);
+    errors[wheel_i] = joint_velocity - cmds[wheel_i];
 
     if (!joint_controllers_[wheel_i]->SetVelocityTarget(
         joint_scoped_names_[wheel_i],

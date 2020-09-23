@@ -55,6 +55,7 @@ The following parameters can be passed as children on the sdf plugin element.
 * `latency`: seconds to wait before applying commands to the joint motors, useful to simulate real-world latency of vehicle commands
 * `command_timeout`: seconds to wait until invalidating the last command and setting motor target velocity to zero, latency will be added implicitly
 * `update_rate`: update rate in Hz
+* `publish_pid`: enable publishing of PID controller values as ROS topic
 * `{joint_name}_pid_gain`: gains in order PID for respective joint motor
 * `{joint_name}_i_range`: integral error bounds for respective joint motor
 * `{joint_name}`: change the plugins search name for logical joint
@@ -68,7 +69,7 @@ Parameters on the geometry of the vehicle are derived from the links and joints 
 ### Publishers
 
 * `odom_4ws`: drive odometry of type `four_wheel_steering_msgs/msg/FourWheelSteeringStamped`
-* `pid/{joint_name}`: PID state of type `control_msgs/msg/PidState`
+* `pid/{joint_name}`: PID state of type `control_msgs/msg/PidState`, enabled if `publish_pid` is true
 
 ### Example
 
@@ -82,9 +83,7 @@ Parameters on the geometry of the vehicle are derived from the links and joints 
 
         <robot_base_frame>base_footprint</robot_base_frame>
         <steering_gear_transmission_ratio>1.5</steering_gear_transmission_ratio>
-        <latency>0.0</latency>
         <update_rate>100.0</update_rate>
-        <command_timeout>0.02</command_timeout>
 
         <front_right_motor>front_right_motor</front_right_motor>
         <front_left_motor>front_left_motor</front_left_motor>
@@ -103,6 +102,40 @@ Parameters on the geometry of the vehicle are derived from the links and joints 
         <rear_steering_pid_gain>1 0 0</rear_steering_pid_gain>
       </plugin>
       ...
+</model>
+```
+
+### Advanced
+
+Additional parameters enable simulation of noise on the output odometry as well as latency behaviour.
+
+```xml
+<model>
+  ...
+  <plugin name="gazebo_ros_4ws" filename="libgazebo_ros_four_wheel_steering.so">
+    ...
+    <!-- wait 100ms before applying a command -->
+    <latency>0.1</latency>
+    <!-- if the command timestamp is older than 20ms, ignore and stop the vehicle -->
+    <command_timeout>0.02</command_timeout>
+
+    <!-- configure noise on the speed and steering angles measured for odom_4ws -->
+    <speed_sensing>
+        <noise type="gaussian_quantized">
+          <stddev>0.005</stddev>
+          <!-- quantize speed field of odom_4ws to 0.1 kph -->
+          <precision>0.027777778</precision>
+        </noise>
+    </speed_sensing>
+    <steering_angle_sensing>
+        <noise type="gaussian_quantized">
+          <stddev>0.005</stddev>
+          <!-- quantize front and rear steering angle to 1 degree -->
+          <precision>0.02</precision>
+        </noise>
+    </steering_angle_sensing>
+    ...
+  </plugin>
 </model>
 ```
 
