@@ -73,7 +73,6 @@ void compute_wheel_targets(
 
   // Compute wheels velocities
   if (fabs(cmd_4ws.speed) > 0.001) {
-    //Virutal front and rear wheelbase
     // distance between the projection of the CIR on the wheelbase and the front axle
     double l_front = 0;
     if (fabs(tan(front_left_angle) - tan(front_right_angle)) >
@@ -112,7 +111,12 @@ void compute_wheel_targets(
       (cmd_4ws.speed + angular_speed_cmd * steering_track / 2),
       (l_rear * angular_speed_cmd)) / vehicle.wheel_radius +
       vel_steering_offset;
+  } else {
+    cmds[FRONT_LEFT_MOTOR] = 0.0;
+    cmds[FRONT_RIGHT_MOTOR] = 0.0;
+    cmds[REAR_LEFT_MOTOR] = 0.0;
+    cmds[REAR_RIGHT_MOTOR] = 0.0;
   }
 }
 
-} // namespace gazebo_plugins
+}  // namespace gazebo_plugins
