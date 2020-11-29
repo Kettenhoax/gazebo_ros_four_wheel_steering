@@ -4,10 +4,8 @@ Controls a vehicle with front and rear steering based on `four_wheel_steering_ms
 
 ## Installation
 
-Developed and tested with ROS eloquent.
-
 * clone to your ros2 workspace
-* clone the eloquent version of `four_wheel_steering_msgs` from [https://github.com/Kettenhoax/four_wheel_steering_msgs/tree/eloquent](https://github.com/Kettenhoax/four_wheel_steering_msgs/tree/eloquent)
+* clone `four_wheel_steering_msgs` from [https://github.com/Kettenhoax/four_wheel_steering_msgs/tree/foxy](https://github.com/Kettenhoax/four_wheel_steering_msgs/tree/foxy)
 * rosdep install --from-path src -i
 * colcon build
 * source install/setup.bash

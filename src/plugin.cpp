@@ -164,10 +164,10 @@ static double GetPositionJointDefaultGain(gazebo::physics::JointPtr joint)
 
 static gazebo::sensors::NoisePtr GetSpeedNoiseModel(sdf::ElementPtr _root)
 {
-  auto speed_sensing = _root->GetElement("speed_sensing");
-  if (nullptr == speed_sensing) {
+  if (!_root->HasElement("speed_sensing")) {
     return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
   }
+  auto speed_sensing = _root->GetElement("speed_sensing");
   auto speed_noise_element = speed_sensing->GetElement("noise");
   if (nullptr == speed_noise_element) {
     return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
@@ -177,10 +177,10 @@ static gazebo::sensors::NoisePtr GetSpeedNoiseModel(sdf::ElementPtr _root)
 
 static gazebo::sensors::NoisePtr GetSteeringAngleNoiseModel(sdf::ElementPtr _root)
 {
-  auto steering_angle_sensing = _root->GetElement("steering_angle_sensing");
-  if (nullptr == steering_angle_sensing) {
+  if (!_root->HasElement("steering_angle_sensing")) {
     return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
   }
+  auto steering_angle_sensing = _root->GetElement("steering_angle_sensing");
   auto steering_angle_noise_element = steering_angle_sensing->GetElement("noise");
   if (nullptr == steering_angle_noise_element) {
     return gazebo::sensors::NoisePtr(new gazebo::sensors::Noise(gazebo::sensors::Noise::NONE));
@@ -237,7 +237,7 @@ void GazeboRosFourWheelSteering::Load(gazebo::physics::ModelPtr _model, sdf::Ele
       IsVelocityJoint(i) ? GetVelocityJointDefaultGain(impl_->joints_[i]) :
       GetPositionJointDefaultGain(
       impl_->joints_[i]);
-    if (ignition::math::v4::isnan(default_gain)) {
+    if (ignition::math::isnan(default_gain)) {
       default_gain = 1.0;
     }
     auto steering_default_pid = Vector3d(default_gain, 0.0, 0.0);
@@ -499,7 +499,7 @@ void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
 
   for (auto wheel_i : {FRONT_RIGHT_MOTOR, FRONT_LEFT_MOTOR, REAR_RIGHT_MOTOR, REAR_LEFT_MOTOR}) {
     // set wheel speed efforts
-    if (ignition::math::v4::isnan(cmds[wheel_i])) {
+    if (ignition::math::isnan(cmds[wheel_i])) {
       RCLCPP_WARN(
         ros_node_->get_logger(),
         "NaN command for joint [%s]", joints_[wheel_i]->GetName().c_str());
@@ -524,7 +524,7 @@ void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
     errors[steer_i] = current_angle - cmds[steer_i];
 
     // set wheel speed efforts
-    if (ignition::math::v4::isnan(cmds[steer_i])) {
+    if (ignition::math::isnan(cmds[steer_i])) {
       RCLCPP_WARN(
         ros_node_->get_logger(),
         "NaN command for joint [%s]", joints_[steer_i]->GetName().c_str());
@@ -543,20 +543,19 @@ void GazeboRosFourWheelSteeringPrivate::UpdateControllers(double dt)
 
   if (!pid_publishers_.empty()) {
     for (size_t i = FRONT_RIGHT_MOTOR; i <= REAR_STEERING; i++) {
-      auto pid = joint_pids_[i];
       control_msgs::msg::PidState state;
       state.header.frame_id = state_frame_id_;
       state.header.stamp = ros_time;
       state.timestep = rclcpp::Duration::from_seconds(dt);
       state.error = errors[i];
       state.error_dot = NAN;
-      pid.GetErrors(state.p_error, state.i_error, state.d_error);
-      state.p_term = pid.GetPGain();
-      state.i_term = pid.GetIGain();
-      state.d_term = pid.GetDGain();
-      state.i_max = pid.GetIMax();
-      state.i_min = pid.GetIMin();
-      state.output = pid.GetCmd();
+      joint_pids_[i].GetErrors(state.p_error, state.i_error, state.d_error);
+      state.p_term = joint_pids_[i].GetPGain();
+      state.i_term = joint_pids_[i].GetIGain();
+      state.d_term = joint_pids_[i].GetDGain();
+      state.i_max = joint_pids_[i].GetIMax();
+      state.i_min = joint_pids_[i].GetIMin();
+      state.output = joint_pids_[i].GetCmd();
       pid_publishers_[i]->publish(state);
     }
   }

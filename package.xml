@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>gazebo_ros_four_wheel_steering</name>
-  <version>0.1.1</version>
+  <version>1.0.0</version>
   <description>Four wheel steering control gazebo_ros plugin</description>
   <maintainer email="marcel.zeilinger@ait.ac.at">Marcel Zeilinger</maintainer>
   <license>Apache-2.0</license>
