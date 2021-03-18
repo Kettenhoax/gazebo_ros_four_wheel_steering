@@ -33,19 +33,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 #include <cmath>
-#include <gazebo_ros_four_wheel_steering/plugin.hpp>
+#include <memory>
+#include <utility>
 #include "controller.hpp"
 
-namespace gazebo_plugins
+namespace gazebo_ros_four_wheel_steering
 {
 
+using namespace std; // NOLINT
 using four_wheel_steering_msgs::msg::FourWheelSteering;
 
-void compute_wheel_targets(
-  const FourWheelSteering & cmd_4ws,
-  const FourWheelSteeringVehicle & vehicle, double cmds[6])
+FourWheelSteeringCommand compute_four_wheel_steering_command(
+  const four_wheel_steering_msgs::msg::FourWheelSteering & cmd_4ws,
+  const FourWheelSteeringVehicle & vehicle)
 {
-// Compute steering angles
+  // Compute steering angles
   const double tan_front_steering = tan(cmd_4ws.front_steering_angle);
   const double tan_rear_steering = tan(cmd_4ws.rear_steering_angle);
 
@@ -59,6 +61,8 @@ void compute_wheel_targets(
   double rear_left_angle = 0.0;
   double rear_right_angle = 0.0;
 
+  FourWheelSteeringCommand cmd_result;
+
   if (fabs(vehicle.wheel_base - fabs(steering_diff)) > 0.001) {
     // compute optimal angles resulting from ackermann steering, to determine optimal torque on motors
     front_left_angle = atan(wb * tan_front_steering / (wb - steering_diff));
@@ -67,8 +71,10 @@ void compute_wheel_targets(
     rear_right_angle = atan(wb * tan_rear_steering / (wb + steering_diff));
 
     // convert from wheel angle to steering gear angle
-    cmds[FRONT_STEERING] = -vehicle.steering_gear_transmission_ratio * cmd_4ws.front_steering_angle;
-    cmds[REAR_STEERING] = -vehicle.steering_gear_transmission_ratio * cmd_4ws.rear_steering_angle;
+    cmd_result.front_steering_angle = -vehicle.steering_gear_transmission_ratio *
+      cmd_4ws.front_steering_angle;
+    cmd_result.rear_steering_angle = -vehicle.steering_gear_transmission_ratio *
+      cmd_4ws.rear_steering_angle;
   }
 
   // Compute wheels velocities
@@ -95,28 +101,24 @@ void compute_wheel_targets(
       vehicle.wheel_radius;
     const double sign = copysign(1.0, cmd_4ws.speed);
 
-    cmds[FRONT_LEFT_MOTOR] = sign * std::hypot(
+    cmd_result.front_left_radps = sign * std::hypot(
       (cmd_4ws.speed - angular_speed_cmd * steering_track / 2),
       (l_front * angular_speed_cmd)) / vehicle.wheel_radius -
       vel_steering_offset;
-    cmds[FRONT_RIGHT_MOTOR] = sign * std::hypot(
+    cmd_result.front_right_radps = sign * std::hypot(
       (cmd_4ws.speed + angular_speed_cmd * steering_track / 2),
       (l_front * angular_speed_cmd)) / vehicle.wheel_radius +
       vel_steering_offset;
-    cmds[REAR_LEFT_MOTOR] = sign * std::hypot(
+    cmd_result.rear_left_radps = sign * std::hypot(
       (cmd_4ws.speed - angular_speed_cmd * steering_track / 2),
       (l_rear * angular_speed_cmd)) / vehicle.wheel_radius -
       vel_steering_offset;
-    cmds[REAR_RIGHT_MOTOR] = sign * std::hypot(
+    cmd_result.rear_right_radps = sign * std::hypot(
       (cmd_4ws.speed + angular_speed_cmd * steering_track / 2),
       (l_rear * angular_speed_cmd)) / vehicle.wheel_radius +
       vel_steering_offset;
-  } else {
-    cmds[FRONT_LEFT_MOTOR] = 0.0;
-    cmds[FRONT_RIGHT_MOTOR] = 0.0;
-    cmds[REAR_LEFT_MOTOR] = 0.0;
-    cmds[REAR_RIGHT_MOTOR] = 0.0;
   }
+  return cmd_result;
 }
 
-}  // namespace gazebo_plugins
+}  // namespace gazebo_ros_four_wheel_steering

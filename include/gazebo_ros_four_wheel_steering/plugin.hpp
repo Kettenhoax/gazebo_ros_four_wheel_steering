@@ -17,33 +17,12 @@
 #include <gazebo/common/Plugin.hh>
 #include <memory>
 
-namespace gazebo_plugins
+namespace gazebo_ros_four_wheel_steering
 {
 class GazeboRosFourWheelSteeringPrivate;
 
-enum JointIdentifier
-{
-  /// Front right traction motor
-  FRONT_RIGHT_MOTOR,
-
-  /// Front left traction motor
-  FRONT_LEFT_MOTOR,
-
-  /// Rear right traction motor
-  REAR_RIGHT_MOTOR,
-
-  /// Rear left traction motor
-  REAR_LEFT_MOTOR,
-
-  /// Front steering
-  FRONT_STEERING,
-
-  /// Rear steering
-  REAR_STEERING,
-};
-
 /// A control drive plugin for robots with two steerable axles.
-/// Subscribes to four_wheel_steering_msgs/msg/FourWheelSteering
+/// Subscribes to four_wheel_steering_msgs/msg/FourWheelSteeringStamped
 
 /**
   Example Usage:
@@ -86,4 +65,4 @@ private:
   /// Private data pointer
   std::unique_ptr<GazeboRosFourWheelSteeringPrivate> impl_;
 };
-}  // namespace gazebo_plugins
+}  // namespace gazebo_ros_four_wheel_steering

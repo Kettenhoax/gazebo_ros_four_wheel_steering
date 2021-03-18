@@ -37,11 +37,29 @@
 #include <four_wheel_steering_msgs/msg/four_wheel_steering.hpp>
 #include "vehicle.hpp"
 
-namespace gazebo_plugins
+namespace gazebo_ros_four_wheel_steering
 {
 
-void compute_wheel_targets(
-  const four_wheel_steering_msgs::msg::FourWheelSteering & cmd_4ws,
-  const FourWheelSteeringVehicle & vehicle, double cmds[8]);
+struct FourWheelSteeringCommand
+{
+  double front_left_radps;
+  double front_right_radps;
+  double rear_left_radps;
+  double rear_right_radps;
 
-} // namespace gazebo_plugins
+  double front_steering_angle;
+  double rear_steering_angle;
+
+  FourWheelSteeringCommand()
+  : front_left_radps(0), front_right_radps(0), rear_left_radps(0), rear_right_radps(0),
+    front_steering_angle(0), rear_steering_angle(0)
+  {
+
+  }
+};
+
+FourWheelSteeringCommand compute_four_wheel_steering_command(
+  const four_wheel_steering_msgs::msg::FourWheelSteering & cmd_4ws,
+  const FourWheelSteeringVehicle & vehicle);
+
+} // namespace gazebo_ros_four_wheel_steering

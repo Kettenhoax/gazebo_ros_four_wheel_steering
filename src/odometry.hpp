@@ -6,7 +6,7 @@
 #include <vector>
 #include "vehicle.hpp"
 
-namespace gazebo_plugins
+namespace gazebo_ros_four_wheel_steering
 {
 
 using four_wheel_steering_msgs::msg::FourWheelSteeringStamped;
@@ -23,4 +23,4 @@ public:
     std::vector<gazebo::physics::JointPtr>);
 };
 
-}  // namespace gazebo_plugins
+}  // namespace gazebo_ros_four_wheel_steering

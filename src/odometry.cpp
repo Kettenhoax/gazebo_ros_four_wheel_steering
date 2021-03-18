@@ -18,8 +18,11 @@
 #include "gazebo_ros_four_wheel_steering/plugin.hpp"
 #include "odometry.hpp"
 
-namespace gazebo_plugins
+namespace gazebo_ros_four_wheel_steering
 {
+
+using gazebo::physics::ModelPtr;
+using gazebo::physics::JointPtr;
 
 FourWheelSteeringOdometry::FourWheelSteeringOdometry(FourWheelSteeringVehicle vehicle)
 : vehicle_(vehicle) {}
@@ -29,17 +32,14 @@ double common_angle(double left, double right)
   return atan(2 * tan(left) * tan(right) / (tan(left) + tan(right)));
 }
 
-FourWheelSteeringStamped::UniquePtr FourWheelSteeringOdometry::compute(
-  gazebo::physics::ModelPtr model,
-  std::vector<gazebo::physics::JointPtr> joints)
+FourWheelSteeringStamped::UniquePtr FourWheelSteeringOdometry::compute(ModelPtr model)
 {
   auto odom = std::make_unique<FourWheelSteeringStamped>();
 
-  gazebo::physics::JointPtr front_left_kingpin = model->GetJoint("front_left_kingpin");
-  gazebo::physics::JointPtr front_right_kingpin = model->GetJoint("front_right_kingpin");
-
-  gazebo::physics::JointPtr rear_left_kingpin = model->GetJoint("rear_left_kingpin");
-  gazebo::physics::JointPtr rear_right_kingpin = model->GetJoint("rear_right_kingpin");
+  JointPtr front_left_kingpin = model->GetJoint("front_left_kingpin");
+  JointPtr front_right_kingpin = model->GetJoint("front_right_kingpin");
+  JointPtr rear_left_kingpin = model->GetJoint("rear_left_kingpin");
+  JointPtr rear_right_kingpin = model->GetJoint("rear_right_kingpin");
 
   double front_angle = common_angle(
     front_left_kingpin->Position(0), front_right_kingpin->Position(0));
@@ -58,4 +58,4 @@ FourWheelSteeringStamped::UniquePtr FourWheelSteeringOdometry::compute(
   return odom;
 }
 
-}  // namespace gazebo_plugins
+}  // namespace gazebo_ros_four_wheel_steering

@@ -109,13 +109,32 @@
     <plugin
         name="gazebo_ros_4ws"
         filename="libgazebo_ros_four_wheel_steering.so">
+        <ros>
+            <parameter name="front_right_motor.kp" type="double">400.0</parameter>
+            <parameter name="front_right_motor.ki" type="double">10.0</parameter>
+            <parameter name="front_right_motor.kd" type="double">1.0</parameter>
+
+            <parameter name="front_left_motor.kp" type="double">400.0</parameter>
+            <parameter name="front_left_motor.ki" type="double">10.0</parameter>
+            <parameter name="front_left_motor.kd" type="double">1.0</parameter>
+
+            <parameter name="rear_right_motor.kp" type="double">400.0</parameter>
+            <parameter name="rear_right_motor.ki" type="double">10.0</parameter>
+            <parameter name="rear_right_motor.kd" type="double">1.0</parameter>
+
+            <parameter name="rear_left_motor.kp" type="double">400.0</parameter>
+            <parameter name="rear_left_motor.ki" type="double">10.0</parameter>
+            <parameter name="rear_left_motor.kd" type="double">1.0</parameter>
+
+            <parameter name="front_steering.kp" type="double">4000.0</parameter>
+            <parameter name="front_steering.ki" type="double">100.0</parameter>
+            <parameter name="front_steering.kd" type="double">2.0</parameter>
+
+            <parameter name="rear_steering.kp" type="double">4000.0</parameter>
+            <parameter name="rear_steering.ki" type="double">100.0</parameter>
+            <parameter name="rear_steering.kd" type="double">2.0</parameter>
+        </ros>
       <steering_gear_transmission_ratio>1.6</steering_gear_transmission_ratio>
-      <front_right_motor_pid_gain>400 10 1</front_right_motor_pid_gain>
-      <front_left_motor_pid_gain>400 10 1</front_left_motor_pid_gain>
-      <rear_right_motor_pid_gain>400 10 1</rear_right_motor_pid_gain>
-      <rear_left_motor_pid_gain>400 10 1</rear_left_motor_pid_gain>
-      <front_steering_pid_gain>4000 100 2</front_steering_pid_gain>
-      <rear_steering_pid_gain>4000 100 2</rear_steering_pid_gain>
     </plugin>
   </gazebo>
 </robot>
